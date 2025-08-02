@@ -1,0 +1,107 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtualenvs
+.env/
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Jupyter Notebook checkpoints and outputs
+.ipynb_checkpoints/
+*.ipynb
+
+# VSCode settings
+.vscode/
+
+# PyCharm
+.idea/
+
+# macOS
+.DS_Store
+
+# Logs and databases
+*.log
+*.sqlite3
+
+# Data files (raw or processed)
+data/
+mixed_freq_data/
+# or narrow to specific data extensions:
+# *.csv
+# *.tsv
+
+# Model artifacts and results
+models/
+*.pt
+*.pth
+results/
+preds_targets_log.txt
+
+# Hydra / OmegaConf output (if used)
+outputs/
+hydra_logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*~
+
+# Miscellaneous
+coverage/
+*.cover
+docs/_build/
+
+# Ignore secrets
+.env
+.venv
+credentials.json
