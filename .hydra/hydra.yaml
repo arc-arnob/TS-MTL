@@ -118,7 +118,7 @@ hydra:
     - model.params.lf_input_dim=1
     - model.params.lf_output_dim=1
     - model.params.hidden_dim=64
-    - trainer.name=normal_trainer
+    - trainer.name=gradient_balancing_trainer
     - trainer.params.learning_rate=0.001
     - trainer.params.device=cpu
     - data.base_path=src/TS_MTL/data/air_quality
@@ -133,7 +133,7 @@ hydra:
   job:
     name: cli
     chdir: null
-    override_dirname: data.base_path=src/TS_MTL/data/air_quality,data.features=[PM2.5,NO2,PM10],data.hf_suffix=-hf.csv,data.lf_suffix=-lf.csv,data.max_date=2014-11-12,data.min_date=2014-09-01,data.sites=[station-1,station-2,station-3,station-4,station-5,station-6],data.target=[CO],model.name=hard_sharing,model.params.hf_input_dim=3,model.params.hidden_dim=64,model.params.lf_input_dim=1,model.params.lf_output_dim=1,train.epochs=30,trainer.name=normal_trainer,trainer.params.device=cpu,trainer.params.learning_rate=0.001
+    override_dirname: data.base_path=src/TS_MTL/data/air_quality,data.features=[PM2.5,NO2,PM10],data.hf_suffix=-hf.csv,data.lf_suffix=-lf.csv,data.max_date=2014-11-12,data.min_date=2014-09-01,data.sites=[station-1,station-2,station-3,station-4,station-5,station-6],data.target=[CO],model.name=hard_sharing,model.params.hf_input_dim=3,model.params.hidden_dim=64,model.params.lf_input_dim=1,model.params.lf_output_dim=1,train.epochs=30,trainer.name=gradient_balancing_trainer,trainer.params.device=cpu,trainer.params.learning_rate=0.001
     id: ???
     num: ???
     config_name: default

@@ -8,7 +8,7 @@ model:
     num_layers: 2
     dropout: 0.2
 trainer:
-  name: normal_trainer
+  name: gradient_balancing_trainer
   params:
     learning_rate: 0.001
     grad_clip: 1.0

@@ -3,7 +3,7 @@
 - model.params.lf_input_dim=1
 - model.params.lf_output_dim=1
 - model.params.hidden_dim=64
-- trainer.name=normal_trainer
+- trainer.name=gradient_balancing_trainer
 - trainer.params.learning_rate=0.001
 - trainer.params.device=cpu
 - data.base_path=src/TS_MTL/data/air_quality
