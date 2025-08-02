@@ -1,0 +1,2 @@
+[console_scripts]
+ts-mtl = TS_MTL.cli:main

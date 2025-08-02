@@ -1,0 +1,7 @@
+hydra-core
+omegaconf
+torch
+numpy
+pandas
+matplotlib
+python-dateutil

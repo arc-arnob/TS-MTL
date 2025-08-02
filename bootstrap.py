@@ -1,7 +1,7 @@
 import os
 
 
-project = "TS-MTL"
+project = "TS_MTL"
 
 # 2) Folders
 folders = [

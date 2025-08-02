@@ -1,0 +1,35 @@
+model:
+  name: "hard_sharing" # Change this to the appropriate model name
+  params:
+    hf_input_dim: 4 # Adjust this based on your dataset
+    lf_input_dim: 4
+    lf_output_dim: 4
+    hidden_dim: 64
+    client_ids: [1, 2, 3, 4, 5]
+    num_layers: 2
+    dropout: 0.2
+
+trainer:
+  name: "normal_trainer" # Change this to the appropriate trainer name
+  params:
+    learning_rate: 0.001
+    grad_clip: 1.0
+
+train:
+  epochs: 30
+
+data:
+  base_path: "../mixed_freq_data/spain_mf"
+  sites: [Barcelona, Bilbao, Madrid, Seville, Valencia]
+  hf_suffix: "-hf.csv"
+  lf_suffix: "-lf.csv"
+  features: [temp, temp_max, wind_speed, temp_min]
+  target: [load_shortfall_3h]
+  min_date: "2015-01-01"
+  max_date: "2016-05-14"
+  hf_lookback: 64
+  lf_lookback: 32
+  forecast_horizon: 1
+  freq_ratio: 2
+  batch_size: 16
+  train_ratio: 0.8
