@@ -78,7 +78,7 @@ def main(cfg: DictConfig):
     trainer = TrainerCls(
         model,
         learning_rate=cfg.trainer.params.learning_rate,
-        grad_clip=cfg.trainer.params.grad_clip,
+        device=cfg.trainer.params.device,
     )
 
     # 6) Train

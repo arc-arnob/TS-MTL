@@ -1,11 +1,13 @@
+hydra:
+  run:
+    dir: .
 model:
   name: "hard_sharing" # Change this to the appropriate model name
   params:
-    hf_input_dim: 4 # Adjust this based on your dataset
-    lf_input_dim: 4
-    lf_output_dim: 4
+    hf_input_dim: 3 # Adjust this based on your dataset
+    lf_input_dim: 1
+    lf_output_dim: 1
     hidden_dim: 64
-    client_ids: [1, 2, 3, 4, 5]
     num_layers: 2
     dropout: 0.2
 
@@ -14,19 +16,20 @@ trainer:
   params:
     learning_rate: 0.001
     grad_clip: 1.0
+    device: "cpu"
 
 train:
   epochs: 30
 
 data:
-  base_path: "../mixed_freq_data/spain_mf"
-  sites: [Barcelona, Bilbao, Madrid, Seville, Valencia]
+  base_path: "src/TS_MTL/data/air_quality"
+  sites: [station-1, station-2, station-3, station-4, station-5, station-6]
   hf_suffix: "-hf.csv"
   lf_suffix: "-lf.csv"
-  features: [temp, temp_max, wind_speed, temp_min]
-  target: [load_shortfall_3h]
-  min_date: "2015-01-01"
-  max_date: "2016-05-14"
+  features: ["PM2.5", "NO2", "PM10"]
+  target: ["CO"]
+  min_date: "2014-09-01"
+  max_date: "2014-11-12"
   hf_lookback: 64
   lf_lookback: 32
   forecast_horizon: 1

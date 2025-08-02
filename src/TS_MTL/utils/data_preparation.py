@@ -30,18 +30,24 @@ def prepare_client_data(
     # Load data
     hf_df = pd.read_csv(hf_file, index_col=0, parse_dates=True)
     lf_df = pd.read_csv(lf_file, index_col=0, parse_dates=True)
-    
+
     # Sort by date
     hf_df = hf_df.sort_index()
     lf_df = lf_df.sort_index()
     
     # Filter Features
     hf_df = hf_df[features]
-    if isinstance(target, list):
-        lf_df = lf_df[target]
-    else:
-        lf_df = lf_df[[target]]
     
+    # Handle target selection for low-frequency data
+    # Convert OmegaConf ListConfig to regular list if needed
+    if hasattr(target, '__iter__') and not isinstance(target, str):
+        # It's a list-like object (including OmegaConf ListConfig)
+        target_list = list(target)
+        lf_df = lf_df[target_list]
+    else:
+        # It's a single string target
+        lf_df = lf_df[[target]]
+
     # Filter data between min_date and max_date
     if min_date:
         min_date = dateutil.parser.parse(min_date) if isinstance(min_date, str) else min_date

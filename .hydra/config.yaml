@@ -1,0 +1,42 @@
+model:
+  name: hard_sharing
+  params:
+    hf_input_dim: 3
+    lf_input_dim: 1
+    lf_output_dim: 1
+    hidden_dim: 64
+    num_layers: 2
+    dropout: 0.2
+trainer:
+  name: normal_trainer
+  params:
+    learning_rate: 0.001
+    grad_clip: 1.0
+    device: cpu
+train:
+  epochs: 30
+data:
+  base_path: src/TS_MTL/data/air_quality
+  sites:
+  - station-1
+  - station-2
+  - station-3
+  - station-4
+  - station-5
+  - station-6
+  hf_suffix: -hf.csv
+  lf_suffix: -lf.csv
+  features:
+  - PM2.5
+  - NO2
+  - PM10
+  target:
+  - CO
+  min_date: '2014-09-01'
+  max_date: '2014-11-12'
+  hf_lookback: 64
+  lf_lookback: 32
+  forecast_horizon: 1
+  freq_ratio: 2
+  batch_size: 16
+  train_ratio: 0.8
