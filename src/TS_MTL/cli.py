@@ -2,7 +2,8 @@ import hydra
 from omegaconf import DictConfig
 from torch.utils.data import DataLoader
 import numpy as np
-
+import torch
+import random
 from .models import MODEL_REGISTRY
 from .trainers import TRAINER_REGISTRY
 from .utils.data_preparation import (
@@ -13,6 +14,17 @@ from .utils.data_preparation import (
 
 @hydra.main(config_path="../../configs", config_name="default")
 def main(cfg: DictConfig):
+    
+    # ────────────── Set seeds ──────────────
+    seed = cfg.get("seed", 42)
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    # If you’re using CUDA:
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    # ────────────────────────────────────────
+
     # 1) Build file‐pairs for each client (HF and LF)
     base   = cfg.data.base_path
     sites  = cfg.data.sites
