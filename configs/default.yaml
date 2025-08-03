@@ -17,9 +17,20 @@ trainer:
     learning_rate: 0.001
     grad_clip: 1.0
     device: "cpu"
+    # --- ONLY for ts_diff ---
+    time_emb_dim: 128
+
+# ──────────────────────────────────────────────
+# DIFFUSION: only used when model.name == "ts_diff"
+# ──────────────────────────────────────────────
+diffusion:
+  num_timesteps: 100
+  beta_start: 1e-4
+  beta_end: 0.1
 
 train:
   epochs: 30
+  eval_horizons: [1, 2, 4, 8, 16] # only used by ts_diff
 
 data:
   base_path: "src/TS_MTL/data/air_quality"

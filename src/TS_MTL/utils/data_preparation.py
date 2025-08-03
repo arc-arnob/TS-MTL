@@ -1,19 +1,11 @@
 import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader, ConcatDataset
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import os
-from typing import Dict, List, Tuple, Optional
-import time
-import json
 import dateutil
-from datetime import datetime
-
+from torch.utils.data import ConcatDataset, Subset
 from .custom_scaler import CustomScaler
 from .mixed_frequency_dataset import MixedFrequencyDataset
+from .single_frequency_dataset import SingleFrequencyDataset
 
 #####################################################
 # Data Preparation Functions
@@ -152,6 +144,91 @@ def create_client_datasets_with_id(
             continue
     
     return client_datasets
+
+
+def create_tsdiff_datasets(
+    client_data_pairs, features, target, client_ids=None, min_date=None, max_date=None,
+    hf_lookback=192, lf_lookback=14, forecast_horizon=1, freq_ratio=90, train_ratio=0.8, debug=False
+):
+    """Create datasets for TSDiff training."""
+    all_train_datasets = []
+    all_test_datasets = []
+    client_info = {}
+    
+    if client_ids is None:
+        client_ids = [i+1 for i in range(len(client_data_pairs))]
+    
+    for i, ((hf_file, lf_file), client_id) in enumerate(zip(client_data_pairs, client_ids)):
+        if debug:
+            print(f"\nProcessing client {client_id}: {os.path.basename(hf_file)}")
+        
+        try:
+            hf_data, lf_data, hf_scaler, lf_scaler, hf_cols, lf_cols = prepare_client_data(
+                hf_file=hf_file,
+                lf_file=lf_file,
+                features=features,
+                target=target,
+                min_date=min_date,
+                max_date=max_date,
+                freq_ratio=freq_ratio,
+                debug=debug
+            )
+            
+            # Create training dataset (use LF data for TSDiff)
+            train_dataset = SingleFrequencyDataset(
+                hf_data=hf_data,
+                lf_data=lf_data,
+                hf_lookback=hf_lookback,
+                lf_lookback=lf_lookback,
+                forecast_horizon=forecast_horizon,
+                freq_ratio=freq_ratio,
+                client_id=client_id,
+                mode='train'
+            )
+            
+            # Create test dataset
+            test_dataset = SingleFrequencyDataset(
+                hf_data=hf_data,
+                lf_data=lf_data,
+                hf_lookback=hf_lookback,
+                lf_lookback=lf_lookback,
+                forecast_horizon=forecast_horizon,
+                freq_ratio=freq_ratio,
+                client_id=client_id,
+                mode='test'
+            )
+            
+            # Split into train and test
+            train_size = int(train_ratio * len(train_dataset))
+            test_size = len(test_dataset) - train_size
+            
+            train_indices = list(range(0, train_size))
+            test_indices = list(range(train_size, len(test_dataset)))
+            
+            train_subset = Subset(train_dataset, train_indices)
+            test_subset = Subset(test_dataset, test_indices)
+            
+            all_train_datasets.append(train_subset)
+            all_test_datasets.append(test_subset)
+            
+            client_info[client_id] = {
+                'hf_scaler': hf_scaler,
+                'lf_scaler': lf_scaler,
+                'hf_cols': hf_cols,
+                'lf_cols': lf_cols,
+                'hf_data_shape': hf_data.shape,
+                'lf_data_shape': lf_data.shape
+            }
+            
+        except Exception as e:
+            print(f"Error processing client data {client_id}: {e}")
+            continue
+    
+    # Combine all datasets
+    combined_train = ConcatDataset(all_train_datasets)
+    combined_test = ConcatDataset(all_test_datasets)
+    
+    return combined_train, combined_test, client_info
 
 
 def combine_client_datasets(client_datasets, mode='train'):

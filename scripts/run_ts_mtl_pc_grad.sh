@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/run_ts_mtl_ca_grad.sh
+# scripts/run_ts_mtl_pc_grad.sh
 
 python -m TS_MTL.cli \
   model.name=hard_sharing \
@@ -9,7 +9,7 @@ python -m TS_MTL.cli \
   model.params.hidden_dim=64 \
   model.params.num_layers=2 \
   model.params.dropout=0.2 \
-  trainer.name=cagrad_trainer \
+  trainer.name=pc_grad_trainer \
   trainer.params.learning_rate=0.001 \
   trainer.params.device="cpu" \
   data.base_path="src/TS_MTL/data/air_quality" \

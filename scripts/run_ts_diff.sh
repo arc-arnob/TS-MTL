@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# scripts/run_ts_mtl_ca_grad.sh
+# scripts/run_ts_diff.sh
 
 python -m TS_MTL.cli \
-  model.name=hard_sharing \
-  model.params.hf_input_dim=3 \
-  model.params.lf_input_dim=1 \
-  model.params.lf_output_dim=1 \
+  model.name=ts_diff \
   model.params.hidden_dim=64 \
-  model.params.num_layers=2 \
-  model.params.dropout=0.2 \
-  trainer.name=cagrad_trainer \
+  model.params.num_layers=3 \
+  trainer.name=ts_diff_trainer \
   trainer.params.learning_rate=0.001 \
   trainer.params.device="cpu" \
+  trainer.params.time_emb_dim=128 \
+  diffusion.num_timesteps=1000 \
+  diffusion.beta_start=0.0001 \
+  diffusion.beta_end=0.02 \
   data.base_path="src/TS_MTL/data/air_quality" \
   data.sites='[station-1,station-2,station-3,station-4,station-5,station-6]' \
   data.hf_suffix="-hf.csv" \
@@ -27,4 +27,5 @@ python -m TS_MTL.cli \
   data.batch_size=16 \
   data.train_ratio=0.8 \
   train.epochs=30 \
+  train.eval_horizons='[1,3,6,12]' \
   hydra.run.dir=.
