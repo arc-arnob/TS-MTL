@@ -27,5 +27,5 @@ python -m TS_MTL.cli \
   data.batch_size=16 \
   data.train_ratio=0.8 \
   train.epochs=30 \
-  train.eval_horizons='[1,3,6,12]' \
+  train.eval_horizons='[1,2,4,8,16]' \
   hydra.run.dir=.

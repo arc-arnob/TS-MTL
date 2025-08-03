@@ -230,6 +230,67 @@ def create_tsdiff_datasets(
     
     return combined_train, combined_test, client_info
 
+def create_client_datasets(
+    client_data_pairs, features, target, min_date=None, max_date=None,
+    hf_lookback=192, lf_lookback=14, forecast_horizon=1, freq_ratio=90, 
+    train_ratio=0.8, debug=False
+):
+    """Create datasets for multiple clients."""
+    client_datasets = {}
+    
+    for i, (hf_file, lf_file) in enumerate(client_data_pairs):
+        client_id = i
+        if debug:
+            print(f"\nProcessing client {client_id}: {os.path.basename(hf_file)}")
+        
+        try:
+            hf_data, lf_data, hf_scaler, lf_scaler, hf_cols, lf_cols = prepare_client_data(
+                hf_file=hf_file,
+                lf_file=lf_file,
+                features=features,
+                target=target,
+                min_date=min_date,
+                max_date=max_date,
+                freq_ratio=freq_ratio,
+                debug=debug
+            )
+            
+            # Create dataset
+            dataset = MixedFrequencyDataset(
+                hf_data=hf_data,
+                lf_data=lf_data,
+                hf_lookback=hf_lookback,
+                lf_lookback=lf_lookback,
+                forecast_horizon=forecast_horizon,
+                freq_ratio=freq_ratio
+            )
+            
+            # Split into train and test
+            train_size = int(train_ratio * len(dataset))
+            test_size = len(dataset) - train_size
+            
+            train_indices = list(range(0, train_size))
+            test_indices = list(range(train_size, len(dataset)))
+            
+            train_dataset = torch.utils.data.Subset(dataset, train_indices)
+            test_dataset = torch.utils.data.Subset(dataset, test_indices)
+            
+            client_datasets[client_id] = {
+                'train_dataset': train_dataset,
+                'test_dataset': test_dataset,
+                'hf_scaler': hf_scaler,
+                'lf_scaler': lf_scaler,
+                'hf_cols': hf_cols,
+                'lf_cols': lf_cols,
+                'hf_data_shape': hf_data.shape,
+                'lf_data_shape': lf_data.shape
+            }
+            
+        except Exception as e:
+            print(f"Error processing client data {client_id}: {e}")
+            continue
+    
+    return client_datasets
 
 def combine_client_datasets(client_datasets, mode='train'):
     """Combine all clients' train/test datasets."""

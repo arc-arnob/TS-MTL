@@ -13,8 +13,14 @@ from .trainers import TRAINER_REGISTRY
 from .utils.data_preparation import (
     create_client_datasets_with_id,
     combine_client_datasets,
-    create_tsdiff_datasets
+    create_tsdiff_datasets,
+    create_client_datasets
 )
+from .models.federated.per_fed_avg import (
+    train_simple_pfedavg_system,
+    train_personalized_fedavg_system,
+)
+from .models.federated.per_fed_conf import train_private_federated_system
 
 
 @hydra.main(config_path="../../configs", config_name="default")
@@ -29,11 +35,14 @@ def main(cfg: DictConfig):
         torch.cuda.manual_seed_all(seed)
     # ────────────────────────────────────────
 
-    # Check if this is a TSDiff model or MTL model
+    # Check if this is a TSDiff model or MTL model or federated model
     is_tsdiff = cfg.model.name == "ts_diff"
-    
+    is_federated = cfg.get("federated", False)
+
     if is_tsdiff:
         return run_tsdiff_pipeline(cfg)
+    elif is_federated:
+        return run_federated_pipeline(cfg)
     else:
         return run_mtl_pipeline(cfg)
 
@@ -251,6 +260,128 @@ def run_tsdiff_pipeline(cfg: DictConfig):
         "horizon_results": horizon_results
     }
 
+
+def run_federated_pipeline(cfg: DictConfig):
+    print("Running")
+    """Standard or personalized FedAvg pipeline (simple vs Per‐FedAvg)."""
+    base, hf_suf, lf_suf = cfg.data.base_path, cfg.data.hf_suffix, cfg.data.lf_suffix
+    pairs = [(f"{base}/{s}{hf_suf}", f"{base}/{s}{lf_suf}") for s in cfg.data.sites]
+
+    # Use the federated-specific data preparation function
+    client_datasets = create_client_datasets(
+        client_data_pairs=pairs,
+        features=cfg.data.features,
+        target=cfg.data.target,
+        min_date=cfg.data.min_date,
+        max_date=cfg.data.max_date,
+        hf_lookback=cfg.data.hf_lookback,
+        lf_lookback=cfg.data.lf_lookback,
+        forecast_horizon=cfg.data.forecast_horizon,
+        freq_ratio=cfg.data.freq_ratio,
+        train_ratio=cfg.data.train_ratio,
+        debug=cfg.get("debug", False)
+    )
+
+    print(f"\nStarting federated learning with {len(client_datasets)} clients...")
+    print(f"Trainer: {cfg.trainer.name}")
+    print(f"Device: {cfg.trainer.params.device}")
+
+    # pick which training function based on trainer.name
+    if cfg.trainer.name == "simple_pfedavg":
+        system, history = train_simple_pfedavg_system(
+            client_datasets,
+            hidden_dim=cfg.model.params.hidden_dim,
+            num_layers=cfg.model.params.num_layers,
+            dropout=cfg.model.params.dropout,
+            batch_size=cfg.data.batch_size,
+            learning_rate=cfg.trainer.params.learning_rate,
+            personalization_lr=cfg.trainer.params.get("personalization_lr", 1e-5),
+            rounds=cfg.train.epochs,
+            local_epochs=cfg.trainer.params.get("local_epochs", 1),
+            personalization_epochs=cfg.trainer.params.get("personalization_epochs", 10),
+            device=cfg.trainer.params.device,
+        )
+    elif cfg.trainer.name == "secured_fedavg":
+        system, history = train_private_federated_system(
+            client_datasets,
+            hidden_dim=cfg.model.params.hidden_dim,
+            num_layers=cfg.model.params.num_layers,
+            dropout=cfg.model.params.dropout,
+            batch_size=cfg.data.batch_size,
+            learning_rate=cfg.trainer.params.learning_rate,
+            personalization_lr=cfg.trainer.params.get("personalization_lr", 1e-4),
+            rounds=cfg.train.epochs,
+            local_epochs=cfg.trainer.params.get("local_epochs", 5),
+            personalization_epochs=cfg.trainer.params.get("personalization_epochs", 3),
+            noise_scale=cfg.trainer.params.get("noise_scale", 0.1),
+            clip_norm=cfg.trainer.params.get("clip_norm", 1.0),
+            encoder_noise_scale=cfg.trainer.params.get("encoder_noise_scale", 0.05),
+            enable_secure_agg=cfg.trainer.params.get("enable_secure_agg", True),
+            device=cfg.trainer.params.device,
+        )
+    else:  # "personalized_fedavg"
+        system, history = train_personalized_fedavg_system(
+            client_datasets,
+            hidden_dim=cfg.model.params.hidden_dim,
+            num_layers=cfg.model.params.num_layers,
+            dropout=cfg.model.params.dropout,
+            batch_size=cfg.data.batch_size,
+            learning_rate=cfg.trainer.params.learning_rate,
+            meta_learning_rate=cfg.trainer.params.get("meta_learning_rate", 1e-2),
+            epochs=cfg.train.epochs,
+            local_epochs=cfg.trainer.params.get("local_epochs", 1),
+            personalization_steps=cfg.trainer.params.get("personalization_steps", 10),
+            device=cfg.trainer.params.device,
+        )
+
+    # Evaluate final global vs personalized
+    test_loaders = [
+        DataLoader(cd["test_dataset"], batch_size=cfg.data.batch_size)
+        for cd in client_datasets.values()
+    ]
+    final = system.evaluate(test_loaders)
+    
+    print("\nFinal evaluation per client:")
+    for i, m in enumerate(final):
+        client_num = i + 1  # Start from 1 instead of 0
+        print(
+            f"Client {client_num}:\n"
+            f"  Global   → Loss: {m['global_loss']:.4f}, MAE: {m['global_mae']:.4f}, MAPE: {m['global_mape']:.2f}%\n"
+            f"  Personal → Loss: {m['personalized_loss']:.4f}, MAE: {m['personalized_mae']:.4f}, MAPE: {m['personalized_mape']:.2f}%"
+        )
+        
+        # Calculate improvement
+        loss_improvement = (m['global_loss'] - m['personalized_loss']) / m['global_loss'] * 100
+        mape_improvement = (m['global_mape'] - m['personalized_mape']) / m['global_mape'] * 100
+        print(f"  Improvement → Loss: {loss_improvement:.2f}%, MAPE: {mape_improvement:.2f}%\n")
+    
+    # Calculate overall averages
+    overall_global = {
+        metric: np.mean([m[f'global_{metric}'] for m in final])
+        for metric in ['loss', 'mae', 'mse', 'mape']
+    }
+    overall_personalized = {
+        metric: np.mean([m[f'personalized_{metric}'] for m in final])
+        for metric in ['loss', 'mae', 'mse', 'mape']
+    }
+    
+    print("Overall metrics (average across all clients):")
+    print(f"  Global model:")
+    print(f"    Loss: {overall_global['loss']:.4f}, MAE: {overall_global['mae']:.4f}, MAPE: {overall_global['mape']:.2f}%")
+    print(f"  Personalized model:")
+    print(f"    Loss: {overall_personalized['loss']:.4f}, MAE: {overall_personalized['mae']:.4f}, MAPE: {overall_personalized['mape']:.2f}%")
+    
+    avg_loss_improvement = (overall_global['loss'] - overall_personalized['loss']) / overall_global['loss'] * 100
+    avg_mape_improvement = (overall_global['mape'] - overall_personalized['mape']) / overall_global['mape'] * 100
+    print(f"  Average improvement: Loss: {avg_loss_improvement:.2f}%, MAPE: {avg_mape_improvement:.2f}%")
+    
+    return {
+        "system": system, 
+        "history": history, 
+        "final_metrics": final,
+        "overall_global": overall_global,
+        "overall_personalized": overall_personalized
+    }
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,11 @@
 hydra:
   run:
     dir: .
+
+# Set to true for federated learning mode
+federated: false
+secured: false
+
 model:
   name: "hard_sharing" # Change this to the appropriate model name
   params:
@@ -19,6 +24,16 @@ trainer:
     device: "cpu"
     # --- ONLY for ts_diff ---
     time_emb_dim: 128
+    # --- ONLY for federated learning ---
+    personalization_lr: 0.00005
+    local_epochs: 20
+    personalization_epochs: 10
+    meta_learning_rate: 0.01
+    # --- ONLY for secured federated learning ---
+    noise_scale: 0.1
+    clip_norm: 1.0
+    encoder_noise_scale: 0.05
+    enable_secure_agg: true
 
 # ──────────────────────────────────────────────
 # DIFFUSION: only used when model.name == "ts_diff"
