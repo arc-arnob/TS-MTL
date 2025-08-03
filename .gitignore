@@ -80,7 +80,7 @@ mixed_freq_data/
 # *.tsv
 
 # Model artifacts and results
-models/
+# models/  # Don't ignore the source code models directory
 *.pt
 *.pth
 results/
