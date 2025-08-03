@@ -1,4 +1,4 @@
-# TS-MTL: Time Series Multi-Task Learning with Diffusion Models
+# TS-MTL: Time Series Multi-Task Learning
 
 This repository implements multi-task learning approaches for mixed-frequency time series forecasting, comparing traditional MTL methods with diffusion-based and Transformer based approaches across multiple gradient balancing techniques.
 
