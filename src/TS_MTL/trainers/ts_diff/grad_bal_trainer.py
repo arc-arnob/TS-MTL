@@ -4,7 +4,6 @@ import torch.optim as optim
 import numpy as np
 import time
 
-
 class TSDiffGradBalTrainer:
     """Trainer for TSDiff model."""
     def __init__(self, model, diffusion_process, learning_rate=1e-3, device=None):
