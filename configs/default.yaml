@@ -34,6 +34,7 @@ trainer:
     clip_norm: 1.0
     encoder_noise_scale: 0.05
     enable_secure_agg: true
+    fedprox_mu: 0.01
 
 # ──────────────────────────────────────────────
 # DIFFUSION: only used when model.name == "ts_diff"

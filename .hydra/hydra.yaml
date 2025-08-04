@@ -114,7 +114,7 @@ hydra:
     - hydra.mode=RUN
     task:
     - federated=true
-    - trainer.name=secured_fedavg
+    - trainer.name=secured_fedprox
     - trainer.params.learning_rate=0.001
     - trainer.params.personalization_lr=0.0001
     - trainer.params.local_epochs=5
@@ -122,6 +122,7 @@ hydra:
     - trainer.params.noise_scale=0.1
     - trainer.params.clip_norm=1.0
     - trainer.params.encoder_noise_scale=0.05
+    - trainer.params.fedprox_mu=0.01
     - trainer.params.enable_secure_agg=true
     - trainer.params.device=cpu
     - model.params.hidden_dim=64
@@ -145,7 +146,7 @@ hydra:
   job:
     name: cli
     chdir: null
-    override_dirname: data.base_path=src/TS_MTL/data/air_quality,data.batch_size=16,data.features=[PM2.5,NO2,PM10],data.forecast_horizon=16,data.freq_ratio=4,data.hf_lookback=128,data.hf_suffix=-hf.csv,data.lf_lookback=32,data.lf_suffix=-lf.csv,data.max_date=2014-11-12,data.min_date=2014-09-01,data.sites=[station-1,station-2,station-3,station-4,station-5,station-6],data.target=[CO],data.train_ratio=0.8,federated=true,model.params.dropout=0.2,model.params.hidden_dim=64,model.params.num_layers=2,train.epochs=5,trainer.name=secured_fedavg,trainer.params.clip_norm=1.0,trainer.params.device=cpu,trainer.params.enable_secure_agg=true,trainer.params.encoder_noise_scale=0.05,trainer.params.learning_rate=0.001,trainer.params.local_epochs=5,trainer.params.noise_scale=0.1,trainer.params.personalization_epochs=3,trainer.params.personalization_lr=0.0001
+    override_dirname: data.base_path=src/TS_MTL/data/air_quality,data.batch_size=16,data.features=[PM2.5,NO2,PM10],data.forecast_horizon=16,data.freq_ratio=4,data.hf_lookback=128,data.hf_suffix=-hf.csv,data.lf_lookback=32,data.lf_suffix=-lf.csv,data.max_date=2014-11-12,data.min_date=2014-09-01,data.sites=[station-1,station-2,station-3,station-4,station-5,station-6],data.target=[CO],data.train_ratio=0.8,federated=true,model.params.dropout=0.2,model.params.hidden_dim=64,model.params.num_layers=2,train.epochs=5,trainer.name=secured_fedprox,trainer.params.clip_norm=1.0,trainer.params.device=cpu,trainer.params.enable_secure_agg=true,trainer.params.encoder_noise_scale=0.05,trainer.params.fedprox_mu=0.01,trainer.params.learning_rate=0.001,trainer.params.local_epochs=5,trainer.params.noise_scale=0.1,trainer.params.personalization_epochs=3,trainer.params.personalization_lr=0.0001
     id: ???
     num: ???
     config_name: default

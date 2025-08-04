@@ -19,6 +19,7 @@ from .utils.data_preparation import (
 from .models.federated.per_fed_avg import (
     train_simple_pfedavg_system,
     train_personalized_fedavg_system,
+    train_private_fedprox_system,
 )
 from .models.federated.per_fed_conf import train_private_federated_system
 
@@ -262,7 +263,7 @@ def run_tsdiff_pipeline(cfg: DictConfig):
 
 
 def run_federated_pipeline(cfg: DictConfig):
-    print("Running")
+
     """Standard or personalized FedAvg pipeline (simple vs Per‐FedAvg)."""
     base, hf_suf, lf_suf = cfg.data.base_path, cfg.data.hf_suffix, cfg.data.lf_suffix
     pairs = [(f"{base}/{s}{hf_suf}", f"{base}/{s}{lf_suf}") for s in cfg.data.sites]
@@ -316,6 +317,25 @@ def run_federated_pipeline(cfg: DictConfig):
             noise_scale=cfg.trainer.params.get("noise_scale", 0.1),
             clip_norm=cfg.trainer.params.get("clip_norm", 1.0),
             encoder_noise_scale=cfg.trainer.params.get("encoder_noise_scale", 0.05),
+            enable_secure_agg=cfg.trainer.params.get("enable_secure_agg", True),
+            device=cfg.trainer.params.device,
+        )
+    elif cfg.trainer.name == "secured_fedprox":
+        system, history = train_private_fedprox_system(
+            client_datasets,
+            hidden_dim=cfg.model.params.hidden_dim,
+            num_layers=cfg.model.params.num_layers,
+            dropout=cfg.model.params.dropout,
+            batch_size=cfg.data.batch_size,
+            learning_rate=cfg.trainer.params.learning_rate,
+            personalization_lr=cfg.trainer.params.get("personalization_lr", 1e-4),
+            rounds=cfg.train.epochs,
+            local_epochs=cfg.trainer.params.get("local_epochs", 5),
+            personalization_epochs=cfg.trainer.params.get("personalization_epochs", 3),
+            noise_scale=cfg.trainer.params.get("noise_scale", 0.1),
+            clip_norm=cfg.trainer.params.get("clip_norm", 1.0),
+            encoder_noise_scale=cfg.trainer.params.get("encoder_noise_scale", 0.05),
+            fedprox_mu=cfg.trainer.params.get("fedprox_mu", 0.01),
             enable_secure_agg=cfg.trainer.params.get("enable_secure_agg", True),
             device=cfg.trainer.params.device,
         )

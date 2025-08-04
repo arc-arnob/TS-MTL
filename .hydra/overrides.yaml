@@ -1,5 +1,5 @@
 - federated=true
-- trainer.name=secured_fedavg
+- trainer.name=secured_fedprox
 - trainer.params.learning_rate=0.001
 - trainer.params.personalization_lr=0.0001
 - trainer.params.local_epochs=5
@@ -7,6 +7,7 @@
 - trainer.params.noise_scale=0.1
 - trainer.params.clip_norm=1.0
 - trainer.params.encoder_noise_scale=0.05
+- trainer.params.fedprox_mu=0.01
 - trainer.params.enable_secure_agg=true
 - trainer.params.device=cpu
 - model.params.hidden_dim=64

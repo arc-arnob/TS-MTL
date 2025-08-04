@@ -9,6 +9,7 @@ import torch.nn as nn
 from typing import Optional, Tuple
 import numpy as np
 
+# Federated Model Components
 
 class LSTMEncoder(nn.Module):
     """LSTM-based encoder for high-frequency data."""
@@ -71,7 +72,6 @@ class TemporalAttention(nn.Module):
         
         return context
 
-
 class LSTMDecoder(nn.Module):
     """LSTM-based decoder for low-frequency data."""
     
@@ -131,57 +131,6 @@ class LSTMDecoder(nn.Module):
             outputs[:, t, :] = out_t
         
         return outputs
-
-class FedAVGModel(nn.Module):
-    """Client model for FedAVG and related federated learning algorithms."""
-    
-    def __init__(self, hf_input_dim: int, lf_input_dim: int, lf_output_dim: int, 
-                 hidden_dim: int, num_layers: int = 2, dropout: float = 0.1):
-        super().__init__()
-        self.hf_input_dim = hf_input_dim
-        self.lf_input_dim = lf_input_dim
-        self.lf_output_dim = lf_output_dim
-        self.hidden_dim = hidden_dim
-        
-        # Encoder for high-frequency data
-        self.encoder = LSTMEncoder(
-            input_dim=hf_input_dim,
-            hidden_dim=hidden_dim,
-            num_layers=num_layers,
-            dropout=dropout
-        )
-        
-        # Decoder for low-frequency prediction
-        self.decoder = LSTMDecoder(
-            input_dim=lf_input_dim,
-            hidden_dim=hidden_dim,
-            output_dim=lf_output_dim,
-            num_layers=num_layers,
-            dropout=dropout
-        )
-    
-    def forward(self, hf_input: torch.Tensor, lf_input: torch.Tensor) -> dict:
-        """
-        Forward pass through the model.
-        Args:
-            hf_input: High-frequency input tensor (batch_size, hf_seq_len, hf_input_dim)
-            lf_input: Low-frequency input tensor (batch_size, lf_seq_len, lf_input_dim)
-        Returns:
-            Dictionary containing low-frequency predictions
-        """
-        # Encode high-frequency input
-        encoder_outputs, encoder_hidden = self.encoder(hf_input)
-        
-        # Decode with low-frequency decoder
-        decoder_output = self.decoder(lf_input, encoder_outputs)
-        
-        # Extract the last prediction (forecast) from sequence
-        if decoder_output.size(1) > 1:
-            decoder_output = decoder_output[:, -1:, :]
-        
-        return {
-            "lf_pred": decoder_output
-        }
 
 class TemporalAttention(nn.Module):
     """Temporal attention mechanism."""
@@ -456,7 +405,131 @@ class SecureAggregation:
         """
         return {name: param.shape for name, param in model.state_dict().items()}
 
+# FedProx Stuff
+class ProximalTerm:
+    """Helper class to calculate FedProx proximal term penalty."""
+    def __init__(self, mu=0.01):
+        """
+        Initialize the ProximalTerm.
+        Args:
+            mu: Proximal term coefficient (regularization strength)
+        """
+        self.mu = mu
+        self.global_params = None
+        
+    def set_global_params(self, model_state_dict):
+        """Set the global model parameters for proximal term calculation."""
+        self.global_params = model_state_dict
+        
+    def compute_proximal_term(self, model):
+        """
+        Compute the proximal term penalty between current model and global model.
+        Returns the proximal term loss to be added to the client's objective.
+        """
+        if self.global_params is None:
+            return 0.0
+            
+        proximal_term = 0.0
+        for name, param in model.named_parameters():
+            if name in self.global_params:
+                proximal_term += torch.sum((param - self.global_params[name].detach()) ** 2)
+                
+        return 0.5 * self.mu * proximal_term
+class DPOptimizerWithProximal:
+    """Wrapper for any optimizer to add differential privacy to gradients with FedProx support."""
+    def __init__(self, optimizer, proximal_calculator=None, noise_scale=0.1, max_grad_norm=1.0):
+        self.optimizer = optimizer
+        self.noise_scale = noise_scale
+        self.max_grad_norm = max_grad_norm
+        self.proximal_calculator = proximal_calculator
+        
+    def zero_grad(self):
+        """Clear gradients."""
+        self.optimizer.zero_grad()
+        
+    def step(self):
+        """Apply DP-SGD and then optimizer step."""
+        # Get all parameter groups
+        param_groups = self.optimizer.param_groups
+        
+        for group in param_groups:
+            # Clip gradients for each parameter group
+            torch.nn.utils.clip_grad_norm_(group['params'], self.max_grad_norm)
+            
+            # Add noise to gradients
+            for p in group['params']:
+                if p.requires_grad and p.grad is not None:
+                    noise = torch.randn_like(p.grad) * self.noise_scale * self.max_grad_norm
+                    p.grad += noise
+        
+        # Apply optimizer step
+        self.optimizer.step()
+        
+    def state_dict(self):
+        """Get state dict from optimizer."""
+        return self.optimizer.state_dict()
+    
+    def load_state_dict(self, state_dict):
+        """Load state dict to optimizer."""
+        self.optimizer.load_state_dict(state_dict)
+
+# Federated System.
+
+# Normal FedAvg
+class FedAVGModel(nn.Module):
+    """Client model for FedAVG and related federated learning algorithms."""
+    
+    def __init__(self, hf_input_dim: int, lf_input_dim: int, lf_output_dim: int, 
+                 hidden_dim: int, num_layers: int = 2, dropout: float = 0.1):
+        super().__init__()
+        self.hf_input_dim = hf_input_dim
+        self.lf_input_dim = lf_input_dim
+        self.lf_output_dim = lf_output_dim
+        self.hidden_dim = hidden_dim
+        
+        # Encoder for high-frequency data
+        self.encoder = LSTMEncoder(
+            input_dim=hf_input_dim,
+            hidden_dim=hidden_dim,
+            num_layers=num_layers,
+            dropout=dropout
+        )
+        
+        # Decoder for low-frequency prediction
+        self.decoder = LSTMDecoder(
+            input_dim=lf_input_dim,
+            hidden_dim=hidden_dim,
+            output_dim=lf_output_dim,
+            num_layers=num_layers,
+            dropout=dropout
+        )
+    
+    def forward(self, hf_input: torch.Tensor, lf_input: torch.Tensor) -> dict:
+        """
+        Forward pass through the model.
+        Args:
+            hf_input: High-frequency input tensor (batch_size, hf_seq_len, hf_input_dim)
+            lf_input: Low-frequency input tensor (batch_size, lf_seq_len, lf_input_dim)
+        Returns:
+            Dictionary containing low-frequency predictions
+        """
+        # Encode high-frequency input
+        encoder_outputs, encoder_hidden = self.encoder(hf_input)
+        
+        # Decode with low-frequency decoder
+        decoder_output = self.decoder(lf_input, encoder_outputs)
+        
+        # Extract the last prediction (forecast) from sequence
+        if decoder_output.size(1) > 1:
+            decoder_output = decoder_output[:, -1:, :]
+        
+        return {
+            "lf_pred": decoder_output
+        }
+
+# Secured FedAvg
 class PrivacyPreservingFedAVGModel(nn.Module):
+    
     """Privacy-preserving client model for FedAVG."""
     def __init__(self, hf_input_dim, lf_input_dim, lf_output_dim, hidden_dim, num_layers=2, dropout=0.2, 
                  noise_scale=0.05, clip_bound=1.0):
@@ -512,3 +585,4 @@ class PrivacyPreservingFedAVGModel(nn.Module):
         return {
             "lf_pred": decoder_output
         }
+    
