@@ -20,6 +20,7 @@ from .models.federated.per_fed_avg import (
     train_simple_pfedavg_system,
     train_personalized_fedavg_system,
     train_private_fedprox_system,
+    train_private_scaffold_system,
 )
 from .models.federated.per_fed_conf import train_private_federated_system
 
@@ -339,6 +340,24 @@ def run_federated_pipeline(cfg: DictConfig):
             enable_secure_agg=cfg.trainer.params.get("enable_secure_agg", True),
             device=cfg.trainer.params.device,
         )
+    elif cfg.trainer.name == "secured_scaffold":
+        system, history = train_private_scaffold_system(
+            client_datasets,
+            hidden_dim=cfg.model.params.hidden_dim,
+            num_layers=cfg.model.params.num_layers,
+            dropout=cfg.model.params.dropout,
+            batch_size=cfg.data.batch_size,
+            learning_rate=cfg.trainer.params.learning_rate,
+            personalization_lr=cfg.trainer.params.get("personalization_lr", 1e-4),
+            rounds=cfg.train.epochs,
+            local_epochs=cfg.trainer.params.get("local_epochs", 5),
+            personalization_epochs=cfg.trainer.params.get("personalization_epochs", 3),
+            noise_scale=cfg.trainer.params.get("noise_scale", 0.1),
+            clip_norm=cfg.trainer.params.get("clip_norm", 1.0),
+            encoder_noise_scale=cfg.trainer.params.get("encoder_noise_scale", 0.05),
+            enable_secure_agg=cfg.trainer.params.get("enable_secure_agg", True),
+            device=cfg.trainer.params.device,
+        )
     else:  # "personalized_fedavg"
         system, history = train_personalized_fedavg_system(
             client_datasets,
@@ -370,10 +389,6 @@ def run_federated_pipeline(cfg: DictConfig):
             f"  Personal → Loss: {m['personalized_loss']:.4f}, MAE: {m['personalized_mae']:.4f}, MAPE: {m['personalized_mape']:.2f}%"
         )
         
-        # Calculate improvement
-        loss_improvement = (m['global_loss'] - m['personalized_loss']) / m['global_loss'] * 100
-        mape_improvement = (m['global_mape'] - m['personalized_mape']) / m['global_mape'] * 100
-        print(f"  Improvement → Loss: {loss_improvement:.2f}%, MAPE: {mape_improvement:.2f}%\n")
     
     # Calculate overall averages
     overall_global = {

@@ -405,6 +405,8 @@ class SecureAggregation:
         """
         return {name: param.shape for name, param in model.state_dict().items()}
 
+
+
 # FedProx Stuff
 class ProximalTerm:
     """Helper class to calculate FedProx proximal term penalty."""
@@ -472,6 +474,100 @@ class DPOptimizerWithProximal:
     def load_state_dict(self, state_dict):
         """Load state dict to optimizer."""
         self.optimizer.load_state_dict(state_dict)
+
+
+# SCAFFOLD STUFF
+class ScaffoldControlVariate:
+    """Helper class to manage SCAFFOLD control variates."""
+    def __init__(self, model_structure):
+        """
+        Initialize control variates with same structure as model parameters.
+        Args:
+            model_structure: Dictionary mapping parameter names to their shapes
+        """
+        self.control_variates = {}
+        for name, shape in model_structure.items():
+            self.control_variates[name] = torch.zeros(shape)
+    
+    def get_dict(self):
+        """Get control variates as dictionary."""
+        return {name: tensor.clone() for name, tensor in self.control_variates.items()}
+    
+    def update_from_dict(self, new_variates):
+        """Update control variates from dictionary."""
+        for name in self.control_variates:
+            if name in new_variates:
+                self.control_variates[name] = new_variates[name].clone().detach()
+    
+    def to(self, device):
+        """Move control variates to device."""
+        for name in self.control_variates:
+            self.control_variates[name] = self.control_variates[name].to(device)
+        return self
+    
+    def zero_(self):
+        """Zero out all control variates."""
+        for name in self.control_variates:
+            self.control_variates[name].zero_()
+
+
+class DPOptimizerWithScaffold:
+    """Wrapper for any optimizer to add differential privacy and SCAFFOLD control variates."""
+    def __init__(self, optimizer, model, noise_scale=0.1, max_grad_norm=1.0):
+        self.optimizer = optimizer  # Fixed: removed comma
+        self.model = model  
+        self.noise_scale = noise_scale
+        self.max_grad_norm = max_grad_norm
+        
+    def zero_grad(self):
+        """Clear gradients."""
+        self.optimizer.zero_grad()
+        
+    def step(self, server_control_variate=None, client_control_variate=None):
+        """
+        Apply SCAFFOLD correction, DP-SGD and then optimizer step.
+        Args:
+            server_control_variate: Server control variate dict
+            client_control_variate: Client control variate dict
+        """
+        # Apply SCAFFOLD control variate correction
+        if server_control_variate is not None and client_control_variate is not None:
+            # Create parameter name to parameter mapping
+            param_dict = dict(self.model.named_parameters())
+            
+            for name, param in param_dict.items():
+                if param.requires_grad and param.grad is not None:
+                    # Apply SCAFFOLD correction: grad = grad - c_i + c
+                    if name in server_control_variate and name in client_control_variate:
+                        correction = (server_control_variate[name] - client_control_variate[name]).to(param.device)
+                        param.grad = param.grad + correction
+        
+        # Apply differential privacy
+        if self.noise_scale > 0:
+            param_groups = self.optimizer.param_groups
+            
+            for group in param_groups:
+                # Clip gradients for each parameter group
+                if self.max_grad_norm > 0:
+                    torch.nn.utils.clip_grad_norm_(group['params'], self.max_grad_norm)
+                
+                # Add noise to gradients
+                for p in group['params']:
+                    if p.requires_grad and p.grad is not None:
+                        noise = torch.randn_like(p.grad) * self.noise_scale * self.max_grad_norm
+                        p.grad = p.grad + noise
+        
+        # Apply optimizer step
+        self.optimizer.step()
+        
+    def state_dict(self):
+        """Get state dict from optimizer."""
+        return self.optimizer.state_dict()
+    
+    def load_state_dict(self, state_dict):
+        """Load state dict to optimizer."""
+        self.optimizer.load_state_dict(state_dict)
+
 
 # Federated System.
 
@@ -586,3 +682,63 @@ class PrivacyPreservingFedAVGModel(nn.Module):
             "lf_pred": decoder_output
         }
     
+class PrivacyPreservingScaffoldModel(nn.Module):
+    """Privacy-preserving client model for SCAFFOLD."""
+    def __init__(self, hf_input_dim, lf_input_dim, lf_output_dim, hidden_dim, num_layers=2, dropout=0.2, 
+                 noise_scale=0.05, clip_bound=1.0):
+        super().__init__()
+        self.hf_input_dim = hf_input_dim
+        self.lf_input_dim = lf_input_dim
+        self.lf_output_dim = lf_output_dim
+        self.hidden_dim = hidden_dim
+        
+        # Regular encoder for high-frequency data
+        self.base_encoder = LSTMEncoder(
+            input_dim=hf_input_dim,
+            hidden_dim=hidden_dim,
+            num_layers=num_layers,
+            dropout=dropout
+        )
+        
+        # Wrap with private encoder
+        self.encoder = PrivateEncoder(
+            original_encoder=self.base_encoder,
+            noise_scale=noise_scale,
+            clip_bound=clip_bound
+        )
+        
+        # Decoder for low-frequency prediction
+        self.decoder = LSTMDecoderWithBahdanauAttention(
+            input_dim=lf_input_dim,
+            hidden_dim=hidden_dim,
+            output_dim=lf_output_dim,
+            num_layers=num_layers,
+            dropout=dropout
+        )
+    
+    def forward(self, hf_input, lf_input):
+        """
+        Forward pass through the model.
+        Args:
+            hf_input: High-frequency input tensor (batch_size, hf_seq_len, hf_input_dim)
+            lf_input: Low-frequency input tensor (batch_size, lf_seq_len, lf_input_dim)
+        Returns:
+            Dictionary containing low-frequency predictions
+        """
+        # Encode high-frequency input with privacy
+        encoder_outputs, encoder_hidden = self.encoder(hf_input)
+        
+        # Decode with low-frequency decoder
+        decoder_output = self.decoder(lf_input, encoder_outputs)
+        
+        # Extract the last prediction (forecast) from sequence
+        if decoder_output.size(1) > 1:
+            decoder_output = decoder_output[:, -1:, :]
+        
+        return {
+            "lf_pred": decoder_output
+        }
+    
+    def get_model_structure(self):
+        """Get the structure of model parameters for control variates."""
+        return {name: param.shape for name, param in self.named_parameters()}

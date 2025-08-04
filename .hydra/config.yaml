@@ -10,7 +10,7 @@ model:
     num_layers: 2
     dropout: 0.2
 trainer:
-  name: secured_fedprox
+  name: secured_scaffold
   params:
     learning_rate: 0.001
     grad_clip: 1.0
