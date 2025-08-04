@@ -10,7 +10,7 @@ model:
     num_layers: 2
     dropout: 0.2
 trainer:
-  name: secured_scaffold
+  name: secured_fedprox
   params:
     learning_rate: 0.001
     grad_clip: 1.0
@@ -58,7 +58,7 @@ data:
   max_date: '2014-11-12'
   hf_lookback: 128
   lf_lookback: 32
-  forecast_horizon: 16
+  forecast_horizon: 1
   freq_ratio: 4
   batch_size: 16
   train_ratio: 0.8

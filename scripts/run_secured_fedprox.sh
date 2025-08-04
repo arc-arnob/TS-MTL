@@ -26,7 +26,7 @@ python -m TS_MTL.cli \
     data.batch_size=16 \
     data.hf_lookback=128 \
     data.lf_lookback=32 \
-    data.forecast_horizon=16 \
+    data.forecast_horizon=1 \
     data.freq_ratio=4 \
     data.train_ratio=0.8 \
     train.epochs=5 \
