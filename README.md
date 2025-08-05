@@ -264,6 +264,7 @@ Results are logged to:
 
 This codebase supports research in:
 - **Multi-task learning** for time series
+- **Confidentiality** for distributed data sources
 - **Diffusion models** for forecasting
 - **Gradient conflict resolution** in multi-client scenarios  
 - **Mixed-frequency** time series modeling
