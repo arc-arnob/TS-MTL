@@ -6,6 +6,7 @@ from .ts_diff.ts_diff_trainer import TSDiffTrainer
 from .ts_diff.grad_bal_trainer import TSDiffGradBalTrainer 
 from .ts_diff.ca_grad_trainer import TSDiffCAGradTrainer
 from .ts_diff.pc_grad_trainer import TSDiffPCGradTrainer
+
 TRAINER_REGISTRY = {
     "normal_trainer": HardParameterSharingTrainer,
     "cagrad_trainer": CAGradTrainer,
@@ -14,5 +15,5 @@ TRAINER_REGISTRY = {
     "ts_diff_trainer": TSDiffTrainer,
     "ts_diff_grad_bal_trainer": TSDiffGradBalTrainer,
     "ts_diff_ca_grad_trainer": TSDiffCAGradTrainer,
-    "ts_diff_pc_grad_trainer": TSDiffPCGradTrainer
+    "ts_diff_pc_grad_trainer": TSDiffPCGradTrainer,
 }

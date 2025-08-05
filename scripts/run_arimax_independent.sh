@@ -1,0 +1,16 @@
+#!/bin/bash
+python -m TS_MTL.cli \
+    model.name=arimax_independent \
+    model.params.lookback_days=32 \
+    model.params.save_plots=false \
+    data.base_path="src/TS_MTL/data/air_quality" \
+    data.sites='[station-1,station-2,station-3,station-4,station-5,station-6]' \
+    data.hf_suffix="-hf.csv" \
+    data.lf_suffix="-lf.csv" \
+    data.features='[PM2.5,NO2,PM10]' \
+    data.target='[CO]' \
+    data.min_date="2014-09-01" \
+    data.max_date="2014-11-12" \
+    data.forecast_horizon=1 \
+    data.train_ratio=0.8 \
+    hydra.run.dir=.

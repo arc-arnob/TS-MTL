@@ -1,7 +1,7 @@
-federated: true
+federated: false
 secured: false
 model:
-  name: hard_sharing
+  name: arimax_global
   params:
     hf_input_dim: 3
     lf_input_dim: 1
@@ -9,16 +9,18 @@ model:
     hidden_dim: 64
     num_layers: 2
     dropout: 0.2
+    lookback_days: 32
+    save_plots: false
 trainer:
-  name: secured_fedprox
+  name: normal_trainer
   params:
     learning_rate: 0.001
     grad_clip: 1.0
     device: cpu
     time_emb_dim: 128
-    personalization_lr: 0.0001
-    local_epochs: 5
-    personalization_epochs: 3
+    personalization_lr: 5.0e-05
+    local_epochs: 20
+    personalization_epochs: 10
     meta_learning_rate: 0.01
     noise_scale: 0.1
     clip_norm: 1.0
@@ -30,7 +32,7 @@ diffusion:
   beta_start: 0.0001
   beta_end: 0.1
 train:
-  epochs: 5
+  epochs: 30
   eval_horizons:
   - 1
   - 2
@@ -56,9 +58,9 @@ data:
   - CO
   min_date: '2014-09-01'
   max_date: '2014-11-12'
-  hf_lookback: 128
+  hf_lookback: 64
   lf_lookback: 32
-  forecast_horizon: 1
-  freq_ratio: 4
+  forecast_horizon: 16
+  freq_ratio: 2
   batch_size: 16
   train_ratio: 0.8

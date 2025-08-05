@@ -24,4 +24,10 @@ echo "=== Running TSDiff with CAGrad ==="
 echo "=== Running TSDiff with Gradient Balancing ==="
 ./scripts/run_ts_diff_grad_bal.sh
 
+echo "=== Running ARIMAX Independent Baseline ==="
+./scripts/run_arimax_independent.sh
+
+echo "=== Running ARIMAX Global Baseline ==="
+./scripts/run_arimax_global.sh
+
 echo "All experiments completed!"

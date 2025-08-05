@@ -23,6 +23,8 @@ from .models.federated.per_fed_avg import (
     train_private_scaffold_system,
 )
 from .models.federated.per_fed_conf import train_private_federated_system
+from .models.non_fed_baselines.arimax_independent import run_arimax_independent
+from .models.non_fed_baselines.arimax_global import run_arimax_global
 
 
 @hydra.main(config_path="../../configs", config_name="default")
@@ -37,14 +39,17 @@ def main(cfg: DictConfig):
         torch.cuda.manual_seed_all(seed)
     # ────────────────────────────────────────
 
-    # Check if this is a TSDiff model or MTL model or federated model
+    # Check if this is a TSDiff model or MTL model or federated model or ARIMAX
     is_tsdiff = cfg.model.name == "ts_diff"
     is_federated = cfg.get("federated", False)
+    is_arimax = cfg.model.name.startswith("arimax")
 
     if is_tsdiff:
         return run_tsdiff_pipeline(cfg)
     elif is_federated:
         return run_federated_pipeline(cfg)
+    elif is_arimax:
+        return run_arimax_dispatch(cfg)
     else:
         return run_mtl_pipeline(cfg)
 
@@ -303,6 +308,7 @@ def run_federated_pipeline(cfg: DictConfig):
             personalization_epochs=cfg.trainer.params.get("personalization_epochs", 10),
             device=cfg.trainer.params.device,
         )
+    
     elif cfg.trainer.name == "secured_fedavg":
         system, history = train_private_federated_system(
             client_datasets,
@@ -321,6 +327,7 @@ def run_federated_pipeline(cfg: DictConfig):
             enable_secure_agg=cfg.trainer.params.get("enable_secure_agg", True),
             device=cfg.trainer.params.device,
         )
+    
     elif cfg.trainer.name == "secured_fedprox":
         system, history = train_private_fedprox_system(
             client_datasets,
@@ -340,6 +347,7 @@ def run_federated_pipeline(cfg: DictConfig):
             enable_secure_agg=cfg.trainer.params.get("enable_secure_agg", True),
             device=cfg.trainer.params.device,
         )
+    
     elif cfg.trainer.name == "secured_scaffold":
         system, history = train_private_scaffold_system(
             client_datasets,
@@ -358,6 +366,7 @@ def run_federated_pipeline(cfg: DictConfig):
             enable_secure_agg=cfg.trainer.params.get("enable_secure_agg", True),
             device=cfg.trainer.params.device,
         )
+    
     else:  # "personalized_fedavg"
         system, history = train_personalized_fedavg_system(
             client_datasets,
@@ -417,6 +426,128 @@ def run_federated_pipeline(cfg: DictConfig):
         "overall_global": overall_global,
         "overall_personalized": overall_personalized
     }
+
+
+def run_arimax_dispatch(cfg: DictConfig):
+    """Dispatch to the appropriate ARIMAX pipeline based on model name."""
+    if cfg.model.name == "arimax_independent":
+        return run_arimax_independent_pipeline(cfg)
+    elif cfg.model.name == "arimax_global":
+        return run_arimax_global_pipeline(cfg)
+    else:
+        raise ValueError(f"Unknown ARIMAX model: {cfg.model.name}")
+
+
+def run_arimax_independent_pipeline(cfg: DictConfig):
+    """Run the ARIMAX Independent pipeline."""
+    # Extract parameters from config
+    data_params = {
+        "data_base_path": cfg.data.base_path,
+        "sites": cfg.data.sites,
+        "hf_suffix": cfg.data.hf_suffix,
+        "lf_suffix": cfg.data.lf_suffix,
+        "features": cfg.data.features,
+        "target": cfg.data.target,
+        "min_date": cfg.data.min_date,
+        "max_date": cfg.data.max_date,
+        "train_ratio": cfg.data.train_ratio,
+    }
+    
+    # ARIMAX-specific parameters (with defaults)
+    arimax_params = {
+        "lookback_days": cfg.model.params.get("lookback_days", 32),
+        "forecast_horizon": cfg.data.get("forecast_horizon", 16),
+        "save_plots": cfg.model.params.get("save_plots", False),
+    }
+    
+    # Combine parameters
+    all_params = {**data_params, **arimax_params}
+    
+    print(f"\nRunning ARIMAX Independent model...")
+    print(f"Data path: {all_params['data_base_path']}")
+    print(f"Sites: {all_params['sites']}")
+    print(f"Features: {all_params['features']}")
+    print(f"Target: {all_params['target']}")
+    print(f"Lookback days: {all_params['lookback_days']}")
+    print(f"Forecast horizon: {all_params['forecast_horizon']}")
+    
+    # Run the ARIMAX independent model
+    results = run_arimax_independent(**all_params)
+    
+    if results is not None:
+        overall_results = results.get("overall_metrics", {})
+        site_results = results.get("site_results", [])
+        
+        print(f"\nARIMAX Independent results:")
+        print(f"Overall MAE: {overall_results.get('mae', 0.0):.4f}")
+        print(f"Overall MSE: {overall_results.get('mse', 0.0):.4f}")
+        print(f"Overall MAPE: {overall_results.get('mape', 0.0):.2f}%")
+        
+        # Print per-site results
+        if site_results:
+            print("\nPer-site results:")
+            for site_result in site_results:
+                site = site_result.get('site', 'Unknown')
+                mae = site_result.get('mae', 0.0)
+                mse = site_result.get('mse', 0.0)
+                mape = site_result.get('mape', 0.0)
+                print(f"  {site}: MAE={mae:.4f}, MSE={mse:.4f}, MAPE={mape:.2f}%")
+    
+    return results
+
+
+def run_arimax_global_pipeline(cfg: DictConfig):
+    """Run the ARIMAX Global pipeline."""
+    # Extract parameters from config
+    data_params = {
+        "data_base_path": cfg.data.base_path,
+        "sites": cfg.data.sites,
+        "hf_suffix": cfg.data.hf_suffix,
+        "lf_suffix": cfg.data.lf_suffix,
+        "features": cfg.data.features,
+        "target": cfg.data.target,
+        "min_date": cfg.data.min_date,
+        "max_date": cfg.data.max_date,
+        "train_ratio": cfg.data.train_ratio,
+    }
+    
+    # ARIMAX-specific parameters (with defaults)
+    arimax_params = {
+        "lookback_days": cfg.model.params.get("lookback_days", 32),
+        "forecast_horizon": cfg.data.get("forecast_horizon", 16),
+        "save_plots": cfg.model.params.get("save_plots", False),
+    }
+    
+    # Combine parameters
+    all_params = {**data_params, **arimax_params}
+    
+    print(f"\nRunning ARIMAX Global model...")
+    print(f"Data path: {all_params['data_base_path']}")
+    print(f"Sites: {all_params['sites']}")
+    print(f"Features: {all_params['features']}")
+    print(f"Target: {all_params['target']}")
+    print(f"Lookback days: {all_params['lookback_days']}")
+    print(f"Forecast horizon: {all_params['forecast_horizon']}")
+    
+    # Run the ARIMAX global model
+    results = run_arimax_global(**all_params)
+    
+    if results is not None:
+        overall_results = results.get("overall_metrics", {})
+        per_site_mae = results.get("per_site_mae", {})
+        
+        print(f"\nARIMAX Global results:")
+        print(f"Overall MAE: {overall_results.get('mae', 0.0):.4f}")
+        print(f"Overall MSE: {overall_results.get('mse', 0.0):.4f}")
+        print(f"Overall MAPE: {overall_results.get('mape', 0.0):.2f}%")
+        
+        # Print per-site MAE
+        if per_site_mae:
+            print("\nPer-site MAE:")
+            for site, mae in per_site_mae.items():
+                print(f"  {site}: {mae:.4f}")
+    
+    return results
 
 if __name__ == "__main__":
     main()

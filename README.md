@@ -11,6 +11,8 @@ The project compares **Multi-Task Learning (MTL)** with other techniques.
 ### Model Architectures
 1. **Hard Parameter Sharing MTL**: Traditional multi-task learning with shared encoder-decoder and client-specific output layers
 2. **TSDiff**: Diffusion-based time series generation model for multi-step forecasting
+3. **ARIMAX Independent**: Separate ARIMAX models trained for each site/client
+4. **ARIMAX Global**: Single ARIMAX model trained on pooled data from all sites
 
 ### Gradient Balancing Techniques
 1. **Normal Training**: Standard gradient descent without conflict handling
@@ -43,6 +45,7 @@ pip install torch torchvision torchaudio
 pip install numpy pandas matplotlib
 pip install hydra-core omegaconf
 pip install scikit-learn
+pip install statsmodels  # For ARIMAX baselines
 pip install dateutil
 ```
 
@@ -56,6 +59,52 @@ pip install -e .
 ## Usage
 
 ### Quick Start
+
+### Running Individual Experiments
+
+**Multi-Task Learning experiments:**
+```bash
+# MTL with normal training
+./scripts/run_ts_mtl_no_grad_bal.sh
+
+# MTL with PCGrad  
+./scripts/run_ts_mtl_pc_grad.sh
+
+# MTL with CAGrad
+./scripts/run_ts_mtl_ca_grad.sh
+
+# MTL with Gradient Balancing
+./scripts/run_ts_mtl_grad_bal.sh
+```
+
+**TSDiff experiments:**
+```bash
+# TSDiff baseline
+./scripts/run_ts_diff.sh
+
+# TSDiff with PCGrad
+./scripts/run_ts_diff_pc_grad.sh
+
+# TSDiff with CAGrad  
+./scripts/run_ts_diff_ca_grad.sh
+
+# TSDiff with Gradient Balancing
+./scripts/run_ts_diff_grad_bal.sh
+```
+
+**ARIMAX baselines:**
+```bash
+# Independent ARIMAX models (one per site)
+./scripts/run_arimax_independent.sh
+
+# Global ARIMAX model (pooled data)
+./scripts/run_arimax_global.sh
+```
+
+**Run all experiments:**
+```bash
+./scripts/run_all_experiments.sh
+```
 Run individual experiments:
 ```bash
 # MTL Experiments
@@ -105,7 +154,7 @@ results = main(cfg)
 
 ## Experiment Overview
 
-### Complete Experimental Matrix (7 experiments):
+### Complete Experimental Matrix (9 experiments):
 
 | Model | Trainer | Description |
 |-------|---------|-------------|
@@ -116,6 +165,8 @@ results = main(cfg)
 | TSDiff | PCGrad | Diffusion with PCGrad |
 | TSDiff | CAGrad | Diffusion with CAGrad |
 | TSDiff | GradBal | Diffusion with dynamic gradient balancing |
+| ARIMAX | Independent | Statistical baseline with separate models per site |
+| ARIMAX | Global | Statistical baseline with pooled data across sites |
 
 ### Evaluation Metrics
 - **MAE**: Mean Absolute Error
@@ -129,8 +180,13 @@ results = main(cfg)
 TS-MTL/
 ├── src/TS_MTL/
 │   ├── models/
-│   │   ├── ts_mtl.py          # MTL model implementations
-│   │   └── ts_diff.py         # Diffusion model implementations
+│   │   ├── non_fed_baselines/
+│   │   │   ├── ts_mtl.py          # MTL model implementations
+│   │   │   ├── ts_diff.py         # Diffusion model implementations
+│   │   │   ├── arimax_independent.py # Independent ARIMAX models
+│   │   │   ├── arimax_global.py   # Global ARIMAX model
+│   │   │   └── arimax_models.py   # ARIMAX model wrappers
+│   │   └── federated/             # Federated learning models
 │   ├── trainers/
 │   │   ├── ts_mtl/            # MTL trainers
 │   │   │   ├── normal_trainer.py
@@ -149,6 +205,9 @@ TS-MTL/
 ├── scripts/
 │   ├── run_ts_mtl_*.sh        # MTL experiment scripts
 │   ├── run_ts_diff_*.sh       # TSDiff experiment scripts
+│   ├── run_arimax_*.sh        # ARIMAX baseline scripts
+│   └── run_all_experiments.sh # Batch execution
+│   ├── run_ts_diff_*.sh       # TSDiff experiment scripts
 │   └── run_all_experiments.sh # Batch execution
 ├── configs/
 │   └── default.yaml           # Default configuration
@@ -163,11 +222,14 @@ The system uses Hydra for configuration management. Key parameters:
 ```yaml
 # Model Configuration
 model:
-  name: "hard_sharing"  # or "ts_diff"
+  name: "hard_sharing"  # or "ts_diff", "arimax_independent", "arimax_global"
   params:
     hidden_dim: 64
     num_layers: 2
     dropout: 0.2
+    # ARIMAX-specific parameters
+    lookback_days: 32
+    save_plots: false
 
 # Trainer Configuration  
 trainer:

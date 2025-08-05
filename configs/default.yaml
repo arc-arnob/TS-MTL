@@ -15,6 +15,9 @@ model:
     hidden_dim: 64
     num_layers: 2
     dropout: 0.2
+    # --- ONLY for ARIMAX models ---
+    lookback_days: 32
+    save_plots: false
 
 trainer:
   name: "normal_trainer" # Change this to the appropriate trainer name
