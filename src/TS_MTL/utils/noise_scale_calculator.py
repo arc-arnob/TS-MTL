@@ -28,7 +28,7 @@ def find_optimal_noise_scales(dataset_size, batch_size, local_epochs, rounds, ta
         target_delta=target_delta,
         sample_rate=sample_rate,
         steps=steps,
-        accountant='rdp'  # Use RDP accountant as in your implementation
+        accountant='rdp'  # Use RDP accountant
     )
     
     print(f"For ε={target_epsilon}, δ={target_delta}, steps={steps}, sample_rate={sample_rate}:")

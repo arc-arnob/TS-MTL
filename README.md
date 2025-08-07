@@ -13,6 +13,13 @@ The project compares **Multi-Task Learning (MTL)** with other techniques.
 2. **TSDiff**: Diffusion-based time series generation model for multi-step forecasting
 3. **ARIMAX Independent**: Separate ARIMAX models trained for each site/client
 4. **ARIMAX Global**: Single ARIMAX model trained on pooled data from all sites
+5. **Federated Learning**: Distributed training across multiple clients with privacy preservation
+
+### Federated Learning Methods
+1. **Simple Personalized FedAvg**: Basic federated averaging with personalization
+2. **Secured FedAvg**: FedAvg with differential privacy and secure aggregation
+3. **Secured FedProx**: FedProx algorithm with privacy-preserving mechanisms
+4. **Secured SCAFFOLD**: SCAFFOLD with differential privacy for variance reduction
 
 ### Gradient Balancing Techniques
 1. **Normal Training**: Standard gradient descent without conflict handling
@@ -101,25 +108,22 @@ pip install -e .
 ./scripts/run_arimax_global.sh
 ```
 
+**Federated Learning experiments:**
+```bash
+# Simple Personalized FedAvg
+./scripts/run_federated_air_quality.sh
+
+# Secured FedAvg with differential privacy
+./scripts/run_secured_federated_fed_avg.sh
+
+# Secured FedProx with differential privacy
+./scripts/run_secured_fedprox_air_quality.sh
+
+# Secured SCAFFOLD with differential privacy
+./scripts/run_secured_scaffold_air_quality.sh
+```
+
 **Run all experiments:**
-```bash
-./scripts/run_all_experiments.sh
-```
-Run individual experiments:
-```bash
-# MTL Experiments
-./scripts/run_ts_mtl_no_grad_bal.sh    # Baseline MTL
-./scripts/run_ts_mtl_pc_grad.sh        # MTL + PCGrad
-./scripts/run_ts_mtl_ca_grad.sh        # MTL + CAGrad
-
-# TSDiff Experiments  
-./scripts/run_ts_diff.sh               # Baseline TSDiff
-./scripts/run_ts_diff_pc_grad.sh       # TSDiff + PCGrad
-./scripts/run_ts_diff_ca_grad.sh       # TSDiff + CAGrad
-./scripts/run_ts_diff_grad_bal.sh      # TSDiff + Gradient Balancing
-```
-
-### Run All Experiments
 ```bash
 ./scripts/run_all_experiments.sh
 ```
@@ -133,6 +137,13 @@ python -m TS_MTL.cli \
   train.epochs=50 \
   data.batch_size=32 \
   trainer.params.learning_rate=0.0001
+
+# Example: Federated learning with custom parameters
+python -m TS_MTL.cli \
+  federated=true \
+  trainer.name=simple_pfedavg \
+  trainer.params.personalization_epochs=15 \
+  train.epochs=20
 ```
 
 ### Direct Python Usage
@@ -154,7 +165,7 @@ results = main(cfg)
 
 ## Experiment Overview
 
-### Complete Experimental Matrix (9 experiments):
+### Complete Experimental Matrix (13 experiments):
 
 | Model | Trainer | Description |
 |-------|---------|-------------|
@@ -167,6 +178,10 @@ results = main(cfg)
 | TSDiff | GradBal | Diffusion with dynamic gradient balancing |
 | ARIMAX | Independent | Statistical baseline with separate models per site |
 | ARIMAX | Global | Statistical baseline with pooled data across sites |
+| FedAvg | Simple PFedAvg | Simple personalized federated averaging |
+| FedAvg | Secured | Differential privacy + secure aggregation |
+| FedProx | Secured | FedProx with differential privacy |
+| SCAFFOLD | Secured | SCAFFOLD with differential privacy |
 
 ### Evaluation Metrics
 - **MAE**: Mean Absolute Error
@@ -206,8 +221,8 @@ TS-MTL/
 │   ├── run_ts_mtl_*.sh        # MTL experiment scripts
 │   ├── run_ts_diff_*.sh       # TSDiff experiment scripts
 │   ├── run_arimax_*.sh        # ARIMAX baseline scripts
-│   └── run_all_experiments.sh # Batch execution
-│   ├── run_ts_diff_*.sh       # TSDiff experiment scripts
+│   ├── run_federated_*.sh     # Federated learning scripts
+│   ├── run_secured_*.sh       # Secured federated learning scripts
 │   └── run_all_experiments.sh # Batch execution
 ├── configs/
 │   └── default.yaml           # Default configuration
@@ -237,6 +252,21 @@ trainer:
   params:
     learning_rate: 0.001
     device: "cpu"
+    # Federated learning parameters
+    personalization_lr: 0.00005
+    local_epochs: 20
+    personalization_epochs: 10
+    meta_learning_rate: 0.01
+    # Secured federated learning parameters
+    noise_scale: 0.1
+    clip_norm: 1.0
+    encoder_noise_scale: 0.05
+    enable_secure_agg: true
+    fedprox_mu: 0.01
+
+# Federated Learning Configuration
+federated: false  # Set to true for federated experiments
+secured: false    # Set to true for secured federated experiments
 
 # Data Configuration
 data:
