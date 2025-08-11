@@ -170,7 +170,7 @@ import os
 sys.path.insert(0, '${PROJECT_ROOT}/src')
 
 try:
-    from TS_MTL.utils.data_preprocessors.air_quality_data_preprocessor import main
+    from TS_MTL.utils.data_preprocessors.multi_freq_data_processors.air_quality_data_preprocessor import main
     print('Starting air quality data preprocessing...')
     main()
     print('Air quality data preprocessing completed successfully.')

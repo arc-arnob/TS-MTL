@@ -69,7 +69,7 @@ echo "Running wind power data preprocessor..."
 python -c "
 import sys
 sys.path.append('src')
-from TS_MTL.utils.data_preprocessors.wind_preprocessor import main
+from TS_MTL.utils.data_preprocessors.multi_freq_data_processors.wind_preprocessor import main
 main()
 "
 

@@ -170,7 +170,7 @@ check_system() {
     
     # Check directory structure
     log_message "Checking directory structure..."
-    local required_dirs=("src/TS_MTL/utils/data_preprocessors" "scripts")
+    local required_dirs=("src/TS_MTL/utils/data_preprocessors/multi_freq_data_processors" "scripts")
     for dir in "${required_dirs[@]}"; do
         if [ -d "$PROJECT_ROOT/$dir" ]; then
             log_message "✓ $dir exists"

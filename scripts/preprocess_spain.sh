@@ -59,16 +59,12 @@ fi
 
 # Run the preprocessor
 echo "Running Spain load data preprocessor..."
-cd src/TS_MTL/utils/data_preprocessors
-python spain_data_preprocessor.py
-cd ../../../../
-
-# Move the output files to the correct location
-if [ -d "src/TS_MTL/utils/data_preprocessors/cities_common" ]; then
-    echo "Moving processed files to output directory..."
-    mv src/TS_MTL/utils/data_preprocessors/cities_common/* ./src/TS_MTL/data/spain_mf/
-    rmdir src/TS_MTL/utils/data_preprocessors/cities_common
-fi
+python -c "
+import sys
+sys.path.append('src')
+from TS_MTL.utils.data_preprocessors.multi_freq_data_processors.spain_data_preprocessor import main
+main()
+"
 
 # Check if output files were created
 OUTPUT_DIR="./src/TS_MTL/data/spain_mf"

@@ -13,10 +13,10 @@ Successfully enhanced all TS-MTL data preprocessors to be SSH-ready, enabling us
 ### Modified Files:
 1. **`scripts/preprocess_air_quality.sh`** - Enhanced with SSH support
 2. **`scripts/preprocess_all_data.sh`** - Enhanced with batch processing and SSH support
-3. **`src/TS_MTL/utils/data_preprocessors/air_quality_data_preprocessor.py`** - Robust path handling
-4. **`src/TS_MTL/utils/data_preprocessors/load_preprocessor.py`** - Already had correct paths
-5. **`src/TS_MTL/utils/data_preprocessors/wind_preprocessor.py`** - Updated path handling
-6. **`src/TS_MTL/utils/data_preprocessors/spain_data_preprocessor.py`** - Complete refactor with main() function
+3. **`src/TS_MTL/utils/data_preprocessors/multi_freq_data_processors/air_quality_data_preprocessor.py`** - Robust path handling
+4. **`src/TS_MTL/utils/data_preprocessors/multi_freq_data_processors/load_preprocessor.py`** - Already had correct paths
+5. **`src/TS_MTL/utils/data_preprocessors/multi_freq_data_processors/wind_preprocessor.py`** - Updated path handling
+6. **`src/TS_MTL/utils/data_preprocessors/multi_freq_data_processors/spain_data_preprocessor.py`** - Complete refactor with main() function
 7. **`README.md`** - Added SSH preprocessing section
 
 ## Key Features Implemented
