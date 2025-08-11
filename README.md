@@ -63,6 +63,61 @@ cd TS-MTL
 pip install -e .
 ```
 
+## Data Preprocessing
+
+### SSH-Ready Data Preprocessing
+
+TS-MTL includes robust data preprocessing scripts designed for both local and remote (SSH) execution. These scripts automatically handle raw data download, preprocessing, and conversion to mixed-frequency format.
+
+#### Quick Start
+
+```bash
+# Check system requirements
+./scripts/ssh_preprocess.sh check
+
+# Process all datasets (recommended)
+./scripts/ssh_preprocess.sh all --non-interactive
+
+# Or process individual datasets
+./scripts/ssh_preprocess.sh air_quality --non-interactive
+./scripts/ssh_preprocess.sh load --non-interactive
+./scripts/ssh_preprocess.sh wind --non-interactive
+./scripts/ssh_preprocess.sh spain --non-interactive
+```
+
+#### SSH Remote Execution
+
+Perfect for processing data on remote servers or clusters:
+
+```bash
+# Process all datasets remotely
+ssh user@server 'cd /path/to/TS-MTL && ./scripts/ssh_preprocess.sh all --non-interactive'
+
+# Check system requirements remotely
+ssh user@server 'cd /path/to/TS-MTL && ./scripts/ssh_preprocess.sh check'
+
+# Process with custom logging
+ssh user@server 'cd /path/to/TS-MTL && ./scripts/ssh_preprocess.sh air_quality -n -l /tmp/air.log'
+```
+
+#### Supported Datasets
+
+1. **Air Quality (Beijing)**: 6 monitoring stations, CO target prediction
+2. **Load Forecasting**: 20 zones, electricity load with temperature features  
+3. **Wind Power**: 7 wind farms, power generation forecasting
+4. **Spain Multi-Site Load**: Multiple cities, load forecasting
+
+#### Features
+
+- **Non-interactive mode**: Perfect for SSH/batch execution
+- **Robust error handling**: Clear error messages and recovery options
+- **Comprehensive logging**: Detailed logs in `logs/` directory
+- **Path detection**: Works from any working directory
+- **System checks**: Verifies Python packages and dependencies
+- **Output verification**: Confirms successful data processing
+
+For detailed instructions, see [SSH_PREPROCESSING_GUIDE.md](SSH_PREPROCESSING_GUIDE.md).
+
 ## Usage
 
 ### Quick Start
