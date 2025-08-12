@@ -28,9 +28,9 @@ def process_load_forecasting_data(output_dir, load_file, temp_file):
         if col not in ['station_id', 'year', 'month', 'day']:
             temp_df[col] = pd.to_numeric(temp_df[col], errors='coerce')
     
-    # Fill any NaN values created during conversion
-    load_df = load_df.fillna(method='ffill').fillna(method='bfill')
-    temp_df = temp_df.fillna(method='ffill').fillna(method='bfill')
+    # Fill any NaN values created during conversion using modern pandas syntax
+    load_df = load_df.ffill().bfill()
+    temp_df = temp_df.ffill().bfill()
     
     # Process each zone (1-20)
     for zone_id in range(1, 21):
@@ -125,8 +125,8 @@ def process_load_forecasting_data(output_dir, load_file, temp_file):
         zone_lf = zone_lf.sort_values('Time')
         zone_hf = zone_hf.sort_values('Time')
         
-        # Fill any missing values
-        zone_hf = zone_hf.fillna(method='ffill').fillna(method='bfill')
+        # Fill any missing values using modern pandas syntax
+        zone_hf = zone_hf.ffill().bfill()
         
         # Create 15-minute HF data by interpolation
         zone_hf.set_index('Time', inplace=True)

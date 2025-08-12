@@ -54,7 +54,7 @@ def process_spain_multisite_data(input_file, output_dir):
         saved_files.append(output_file)
         print(f"  Saved: {output_file} (shape: {city_df.shape})")
     
-    print(f"✅ Saved {len(cities)} city files with {len(common_feats)} common features each, without city prefixes.")
+    print(f"Saved {len(cities)} city files with {len(common_feats)} common features each, without city prefixes.")
     return saved_files
 
 def main():

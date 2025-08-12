@@ -2,22 +2,88 @@
 
 # Wind Power Data Preprocessor Runner
 # This script processes raw wind power and forecast data
+#
+# Usage:
+#   ./scripts/preprocess_wind.sh [options]
+#   Options:
+#     --non-interactive    Run without user prompts (for SSH/batch execution)
+#     --log-file <path>    Specify log file path (default: ./logs/preprocess_wind.log)
+#     --help              Show this help message
 
 set -e  # Exit on any error
 
-echo "=== Wind Power Data Preprocessor ==="
-echo "Converting raw wind power and forecast data to mixed-frequency format..."
+# Configuration
+NON_INTERACTIVE=false
+LOG_FILE=""
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --non-interactive)
+            NON_INTERACTIVE=true
+            shift
+            ;;
+        --log-file)
+            LOG_FILE="$2"
+            shift 2
+            ;;
+        --help)
+            echo "Wind Power Data Preprocessor"
+            echo "Usage: $0 [options]"
+            echo "Options:"
+            echo "  --non-interactive    Run without user prompts (for SSH/batch execution)"
+            echo "  --log-file <path>    Specify log file path"
+            echo "  --help              Show this help message"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
+# Set up logging
+if [[ -z "$LOG_FILE" ]]; then
+    LOG_FILE="$PROJECT_ROOT/logs/preprocess_wind.log"
+fi
+mkdir -p "$(dirname "$LOG_FILE")"
+
+# Function to log messages
+log_message() {
+    local message="[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+    echo "$message" | tee -a "$LOG_FILE"
+}
+
+# Function to log errors
+log_error() {
+    local message="[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: $1"
+    echo "$message" | tee -a "$LOG_FILE" >&2
+}
+
+log_message "=== Wind Power Data Preprocessor ==="
+log_message "Converting raw wind power and forecast data to mixed-frequency format..."
+log_message "Project root: $PROJECT_ROOT"
+log_message "Log file: $LOG_FILE"
+
+# Change to project root directory
+cd "$PROJECT_ROOT"
 
 # Check if we're in the right directory
 if [ ! -d "src/TS_MTL" ]; then
-    echo "Error: Please run this script from the TS-MTL root directory"
+    log_error "TS-MTL project structure not found in $PROJECT_ROOT"
+    log_error "Please ensure you're running this script from the TS-MTL project directory"
     exit 1
 fi
 
 # Create necessary directories
-echo "Creating output directories..."
+log_message "Creating output directories..."
 mkdir -p ./src/TS_MTL/data/wind
 mkdir -p ./raw_data/wind
+mkdir -p ./logs
 
 # Check if raw data exists
 RAW_DIR="./raw_data/wind"
@@ -32,46 +98,81 @@ EXPECTED_FILES=(
     "windforecasts_wf7.csv"
 )
 
-echo "Checking for raw data files..."
+log_message "Checking for raw data files in $RAW_DIR..."
 missing_files=0
 for file in "${EXPECTED_FILES[@]}"; do
     if [ ! -f "$RAW_DIR/$file" ]; then
-        echo "  Missing: $RAW_DIR/$file"
+        log_error "Missing: $RAW_DIR/$file"
         missing_files=$((missing_files + 1))
     else
-        echo "  Found: $RAW_DIR/$file"
+        log_message "Found: $RAW_DIR/$file"
     fi
 done
 
 if [ $missing_files -gt 0 ]; then
-    echo ""
-    echo "Error: Missing $missing_files raw data files."
-    echo "Please download the wind power forecasting dataset and place the CSV files in:"
-    echo "  $RAW_DIR/"
-    echo ""
-    echo "Expected files:"
+    log_error "Missing $missing_files raw data files."
+    log_message "Please download the wind power forecasting dataset and place the CSV files in:"
+    log_message "  $RAW_DIR/"
+    log_message ""
+    log_message "Expected files:"
     for file in "${EXPECTED_FILES[@]}"; do
-        echo "  - $file"
+        log_message "  - $file"
     done
-    echo ""
-    echo "Dataset source: Wind power forecasting competition data (e.g., GEFCom2012 Wind Track)"
+    log_message ""
+    log_message "Dataset source: Wind power forecasting competition data (e.g., GEFCom2012 Wind Track)"
+    
+    if [ "$NON_INTERACTIVE" = false ]; then
+        echo ""
+        read -p "Do you want to continue anyway? (y/N): " -n 1 -r
+        echo ""
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            log_message "User chose to abort."
+            exit 1
+        fi
+        log_message "User chose to continue despite missing files."
+    else
+        log_error "Cannot continue in non-interactive mode with missing files."
+        exit 1
+    fi
+fi
+
+# Set PYTHONPATH for package importability
+log_message "Setting up Python environment..."
+export PYTHONPATH="${PYTHONPATH}:${PROJECT_ROOT}/src"
+
+# Check if Python and required packages are available
+if ! command -v python &> /dev/null; then
+    log_error "Python is not available in PATH"
     exit 1
 fi
 
-# Set PYTHONPATH if TS_MTL package is not installed
-if ! python -c "import TS_MTL" 2>/dev/null; then
-    echo "Setting PYTHONPATH..."
-    export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
-fi
-
 # Run the preprocessor
-echo "Running wind power data preprocessor..."
-python -c "
+log_message "Running wind power data preprocessor..."
+log_message "PYTHONPATH: $PYTHONPATH"
+
+python_script_result=$(python -c "
 import sys
-sys.path.append('src')
-from TS_MTL.utils.data_preprocessors.multi_freq_data_processors.wind_preprocessor import main
-main()
-"
+import os
+sys.path.insert(0, '${PROJECT_ROOT}/src')
+
+try:
+    from TS_MTL.utils.data_preprocessors.multi_freq_data_processors.wind_preprocessor import main
+    print('Starting wind power data preprocessing...')
+    main()
+    print('Wind power data preprocessing completed successfully.')
+except Exception as e:
+    print(f'PREPROCESSING_ERROR: {e}')
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
+" 2>&1)
+
+if [[ $python_script_result == *PREPROCESSING_ERROR* ]]; then
+    log_error "Preprocessing failed: $python_script_result"
+    exit 1
+else
+    log_message "Preprocessing output: $python_script_result"
+fi
 
 # Check if output files were created
 OUTPUT_DIR="./src/TS_MTL/data/wind"

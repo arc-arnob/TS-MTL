@@ -142,7 +142,7 @@ def run_arimax_global(
     exog_cols_with_sites = exog_cols + list(site_dummies.columns)
 
     # 4) Check stationarity and determine differencing order
-    adf_p = adfuller(global_df[target_col].fillna(method="ffill"))[1]
+    adf_p = adfuller(global_df[target_col].ffill())[1]
     d = 1 if adf_p > 0.05 else 0
     print(f"ADF p-value = {adf_p:.4f} → differencing order d = {d}")
 

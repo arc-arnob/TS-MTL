@@ -41,10 +41,10 @@ def process_airquality_data(output_dir, station_files):
             df['date'] = pd.to_datetime(df[['year', 'month', 'day', 'hour']])
             df.drop(columns=['No', 'year', 'month', 'day', 'hour'], inplace=True, errors='ignore')
             
-            # Handle missing values
-            df.fillna(method='ffill', inplace=True)
-            df.fillna(method='bfill', inplace=True)
-            df.interpolate(method='linear', inplace=True, limit_direction='both')
+            # Handle missing values using modern pandas syntax
+            df = df.ffill()
+            df = df.bfill()
+            df = df.interpolate(method='linear', limit_direction='both')
             
             # Convert columns to numeric (if needed)
             for col in df.columns:

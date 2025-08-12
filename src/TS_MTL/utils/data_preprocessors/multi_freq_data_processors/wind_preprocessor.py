@@ -47,9 +47,9 @@ def process_wind_farm_data(output_dir, wind_power_file, wind_forecast_files):
         lf_data = lf_data.sort_values('Time')
         hf_data = hf_data.sort_values('Time')
         
-        # Fill missing values
-        lf_data.fillna(method="ffill", inplace=True)
-        hf_data.fillna(method="ffill", inplace=True)
+        # Fill missing values using modern pandas syntax
+        lf_data = lf_data.ffill()
+        hf_data = hf_data.ffill()
         
         # Resample LF data to daily frequency
         lf_data_resampled = lf_data.resample('1D', on="Time").median().reset_index()
