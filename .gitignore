@@ -75,6 +75,7 @@ coverage.xml
 # Data files (raw or processed)
 data/
 mixed_freq_data/
+raw_data/
 # or narrow to specific data extensions:
 # *.csv
 # *.tsv

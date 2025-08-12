@@ -109,6 +109,7 @@ def process_airquality_data(output_dir, station_files):
 
 def main():
     # Define station files with robust path handling
+    # These paths are relative to the project root directory
     station_files = {
         "1": "./raw_data/air_quality/PRSA_Data_Aotizhongxin.csv",
         "2": "./raw_data/air_quality/PRSA_Data_Dingling.csv",

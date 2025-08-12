@@ -100,12 +100,21 @@ ssh user@server 'cd /path/to/TS-MTL && ./scripts/ssh_preprocess.sh check'
 ssh user@server 'cd /path/to/TS-MTL && ./scripts/ssh_preprocess.sh air_quality -n -l /tmp/air.log'
 ```
 
-#### Supported Datasets
+#### Main Datasets
 
 1. **Air Quality (Beijing)**: 6 monitoring stations, CO target prediction
+ Site: [text](https://archive.ics.uci.edu/dataset/501/beijing+multi+site+air+quality+data)
 2. **Load Forecasting**: 20 zones, electricity load with temperature features  
+ Site: [text](https://www.kaggle.com/competitions/global-energy-forecasting-competition-2012-load-forecasting/discussion/2862)
 3. **Wind Power**: 7 wind farms, power generation forecasting
+ Site: [text](https://www.kaggle.com/competitions/GEF2012-wind-forecasting)
 4. **Spain Multi-Site Load**: Multiple cities, load forecasting
+ Site: [text](https://www.kaggle.com/competitions/spain-electricity-shortfall-challenge/data)
+
+#### Appendix Datasets
+1. Crypto
+2. Rossman Sales
+3. Solar
 
 #### Features
 
