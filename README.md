@@ -48,11 +48,48 @@ Unlike traditional single-task or same-frequency multi-task approaches, TS-MTL s
 
 ## Experimental Setup
 
-### Dataset
-- **Air Quality Data**: 6 monitoring stations (station-1 to station-6)
+### Datasets
+
+The framework is evaluated on four main real-world datasets that represent different domains and mixed-frequency forecasting challenges:
+
+#### 1. Air Quality (Beijing Multi-Site) - Primary Dataset
+- **Sites**: 6 monitoring stations (station-1 to station-6)
 - **High-frequency features**: PM2.5, NO2, PM10 (15-minute intervals)
 - **Low-frequency target**: CO (hourly intervals)
 - **Time period**: September 1 - November 12, 2014
+- **Challenge**: Environmental monitoring with heterogeneous pollution patterns across sites
+- **Source**: [UCI ML Repository](https://archive.ics.uci.edu/dataset/501/beijing+multi+site+air+quality+data)
+
+#### 2. Load Forecasting (GEFCom2012)
+- **Sites**: 20 electricity demand zones
+- **High-frequency features**: Temperature measurements (hourly)
+- **Low-frequency target**: Electricity load (daily aggregations)
+- **Time period**: Historical load data with weather correlations
+- **Challenge**: Energy demand prediction with temperature dependencies
+- **Source**: [Global Energy Forecasting Competition 2012](https://www.kaggle.com/competitions/global-energy-forecasting-competition-2012-load-forecasting)
+
+#### 3. Wind Power Forecasting (GEFCom2012)
+- **Sites**: 7 wind farms (wind-farm-1 to wind-farm-7)
+- **High-frequency features**: Wind speed (u, v), wind direction, wind magnitude (6-hourly)
+- **Low-frequency target**: Wind power generation (daily)
+- **Time period**: Wind measurement and power generation data
+- **Challenge**: Renewable energy forecasting with meteorological dependencies
+- **Source**: [GEFCom2012 Wind Track](https://www.kaggle.com/competitions/GEF2012-wind-forecasting)
+
+#### 4. Spain Multi-Site Load
+- **Sites**: Multiple Spanish cities/regions
+- **High-frequency features**: Regional electricity demand patterns
+- **Low-frequency target**: Aggregated load forecasting
+- **Challenge**: Multi-regional electricity demand with seasonal patterns
+- **Source**: [Spain Electricity Shortfall Challenge](https://www.kaggle.com/competitions/spain-electricity-shortfall-challenge/data)
+
+### Mixed-Frequency Design
+
+Each dataset is preprocessed to create the mixed-frequency structure:
+- **High-frequency (HF) data**: More frequent measurements (15-min to 6-hourly)
+- **Low-frequency (LF) data**: Target variables at lower frequencies (hourly to daily)
+- **Multi-site structure**: Multiple locations/clients with similar data patterns
+- **Temporal alignment**: Proper synchronization between HF features and LF targets
 
 
 ## Installation
