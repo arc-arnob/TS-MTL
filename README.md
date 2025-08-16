@@ -4,7 +4,26 @@ This repository implements multi-task learning approaches for mixed-frequency ti
 
 ## Overview
 
-The project compares **Multi-Task Learning (MTL)** with other techniques.
+**TS-MTL** is a comprehensive research framework that addresses the challenge of **mixed-frequency time series forecasting** across multiple sites or clients. The project tackles scenarios where different time series have varying sampling frequencies (e.g., hourly vs. daily data) and need to be predicted simultaneously across different locations or entities.
+
+### Key Research Contributions
+
+1. **Mixed-Frequency Multi-Task Learning**: Novel approach to handle time series with different temporal resolutions within a unified multi-task framework
+2. **Gradient Conflict Resolution**: Investigation of gradient balancing techniques (PCGrad, CAGrad, Gradient Balancing) to mitigate conflicting objectives across multiple prediction tasks
+4. **Privacy-Preserving Federated Learning**: Implementation of secured federated learning algorithms with differential privacy for distributed time series forecasting
+5. **Comprehensive Baseline Comparison**: Evaluation against traditional statistical methods (ARIMAX), Diffusion and Transformers and federated learning approaches
+
+### Problem Setting
+
+The framework addresses real-world scenarios where:
+- **Multiple sites/clients** need forecasting (e.g., air quality monitoring stations, wind farms, electrical grids)
+- **Mixed frequencies** exist (high-frequency features like 15-min measurements, low-frequency targets like hourly predictions)
+- **Privacy constraints** require distributed learning without centralizing sensitive data
+- **Gradient conflicts** arise when optimizing multiple prediction tasks simultaneously
+
+### Core Innovation
+
+Unlike traditional single-task or same-frequency multi-task approaches, TS-MTL specifically handles the complexity of **mixed-frequency multi-site forecasting** while providing robust solutions for gradient conflict resolution and privacy preservation in distributed settings.
 
 ## Models & Methods
 
@@ -35,13 +54,6 @@ The project compares **Multi-Task Learning (MTL)** with other techniques.
 - **Low-frequency target**: CO (hourly intervals)
 - **Time period**: September 1 - November 12, 2014
 
-### Configuration
-- **Lookback windows**: 64 (HF), 32 (LF)
-- **Forecast horizon**: 1-16 steps
-- **Frequency ratio**: 2:1 (HF:LF)
-- **Train/test split**: 80/20
-- **Batch size**: 16
-- **Training epochs**: 30
 
 ## Installation
 
@@ -116,14 +128,6 @@ ssh user@server 'cd /path/to/TS-MTL && ./scripts/ssh_preprocess.sh air_quality -
 2. Rossman Sales
 3. Solar
 
-#### Features
-
-- **Non-interactive mode**: Perfect for SSH/batch execution
-- **Robust error handling**: Clear error messages and recovery options
-- **Comprehensive logging**: Detailed logs in `logs/` directory
-- **Path detection**: Works from any working directory
-- **System checks**: Verifies Python packages and dependencies
-- **Output verification**: Confirms successful data processing
 
 For detailed instructions, see [SSH_PREPROCESSING_GUIDE.md](SSH_PREPROCESSING_GUIDE.md).
 
