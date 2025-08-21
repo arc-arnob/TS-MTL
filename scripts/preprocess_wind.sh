@@ -150,7 +150,8 @@ fi
 log_message "Running wind power data preprocessor..."
 log_message "PYTHONPATH: $PYTHONPATH"
 
-python_script_result=$(python -c "
+# Use a more robust Python execution method
+if python -c "
 import sys
 import os
 sys.path.insert(0, '${PROJECT_ROOT}/src')
@@ -165,13 +166,11 @@ except Exception as e:
     import traceback
     traceback.print_exc()
     sys.exit(1)
-" 2>&1)
-
-if [[ $python_script_result == *PREPROCESSING_ERROR* ]]; then
-    log_error "Preprocessing failed: $python_script_result"
-    exit 1
+"; then
+    log_message "Preprocessing completed successfully"
 else
-    log_message "Preprocessing output: $python_script_result"
+    log_error "Preprocessing failed"
+    exit 1
 fi
 
 # Check if output files were created

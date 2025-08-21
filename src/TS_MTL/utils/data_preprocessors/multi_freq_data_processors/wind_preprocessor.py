@@ -30,6 +30,9 @@ def process_wind_farm_data(output_dir, wind_power_file, wind_forecast_files):
         site_col = f'wp{site_id}'
         lf_data = wp_df[['Time', site_col]].copy()
         
+        # Rename the wind power column to 'wp' for consistency across all sites
+        lf_data = lf_data.rename(columns={site_col: 'wp'})
+        
         # Read forecast data (HF data)
         wf_df = pd.read_csv(forecast_file)
         wf_df['date'] = pd.to_datetime(wf_df['date'], format='%Y%m%d%H')
