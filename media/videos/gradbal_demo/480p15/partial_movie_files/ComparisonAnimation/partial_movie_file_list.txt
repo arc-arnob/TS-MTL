@@ -1,0 +1,12 @@
+# This file is used internally by FFMPEG.
+file 'file:/Users/arnobchowdhury/Documents/university_work/Thesis/TS-MTL/media/videos/gradbal_demo/480p15/partial_movie_files/ComparisonAnimation/1185818338_2461899450_223132457.mp4'
+file 'file:/Users/arnobchowdhury/Documents/university_work/Thesis/TS-MTL/media/videos/gradbal_demo/480p15/partial_movie_files/ComparisonAnimation/624642324_2844360058_388772603.mp4'
+file 'file:/Users/arnobchowdhury/Documents/university_work/Thesis/TS-MTL/media/videos/gradbal_demo/480p15/partial_movie_files/ComparisonAnimation/624642324_3269600679_513576100.mp4'
+file 'file:/Users/arnobchowdhury/Documents/university_work/Thesis/TS-MTL/media/videos/gradbal_demo/480p15/partial_movie_files/ComparisonAnimation/624642324_4217992463_3416575267.mp4'
+file 'file:/Users/arnobchowdhury/Documents/university_work/Thesis/TS-MTL/media/videos/gradbal_demo/480p15/partial_movie_files/ComparisonAnimation/624642324_1097219890_2746706249.mp4'
+file 'file:/Users/arnobchowdhury/Documents/university_work/Thesis/TS-MTL/media/videos/gradbal_demo/480p15/partial_movie_files/ComparisonAnimation/624642324_4217992463_2334849376.mp4'
+file 'file:/Users/arnobchowdhury/Documents/university_work/Thesis/TS-MTL/media/videos/gradbal_demo/480p15/partial_movie_files/ComparisonAnimation/624642324_2160046182_4000212082.mp4'
+file 'file:/Users/arnobchowdhury/Documents/university_work/Thesis/TS-MTL/media/videos/gradbal_demo/480p15/partial_movie_files/ComparisonAnimation/624642324_4217992463_2491247756.mp4'
+file 'file:/Users/arnobchowdhury/Documents/university_work/Thesis/TS-MTL/media/videos/gradbal_demo/480p15/partial_movie_files/ComparisonAnimation/624642324_731695735_1423669900.mp4'
+file 'file:/Users/arnobchowdhury/Documents/university_work/Thesis/TS-MTL/media/videos/gradbal_demo/480p15/partial_movie_files/ComparisonAnimation/624642324_3756126281_2268385864.mp4'
+file 'file:/Users/arnobchowdhury/Documents/university_work/Thesis/TS-MTL/media/videos/gradbal_demo/480p15/partial_movie_files/ComparisonAnimation/624642324_2552855209_2918649816.mp4'
